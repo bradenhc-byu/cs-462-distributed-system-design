@@ -21,4 +21,19 @@ A first ruleset for the Quickstart
     send_directive("say", {"something": "Hello World"})
   }   
   
+  rule hello_monkey {
+    select when echo monkey
+    pre{
+      name =  event:attr("name").defaultsTo("Monkey")
+    }
+    send_directive("say", {"something": <<Hello #{name}>>})
+  }
+  
+  rule hello_monkeyt {
+    select when echo monkeyt
+    pre{
+      name = (event:attrs >< "name") => event:attr("name") | "Monkey"
+    }
+    send_directive("say", {"something": <<Hello #{name}>>})
+  }
 }
