@@ -1,4 +1,4 @@
-ruleset twilio {
+ruleset twilio.use {
   meta {
     use module twilio.keys alias keys
     use module twilio.send alias t
@@ -6,8 +6,8 @@ ruleset twilio {
            auth_token = keys:twilio("auth_token")
   }
 
-  rule test_send_sms {
-    select when twilo new_message
+  rule send_new_sms {
+    select when twilio new_message
     t:send_sms(event:attr("to"),
                event:attr("from"),
                event:attr("message")
