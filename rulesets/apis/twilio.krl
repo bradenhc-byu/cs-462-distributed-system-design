@@ -2,8 +2,8 @@ ruleset twilio {
   meta {
     use module twilio.keys alias keys
     use module twilio.send alias t
-      with account_sid = keys:twilo("account_sid")
-           auth_token = keys:twilo("auth_token")
+      with account_sid = keys:twilio("account_sid")
+           auth_token = keys:twilio("auth_token")
   }
 
   rule test_send_sms {
