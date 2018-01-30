@@ -18,8 +18,8 @@ ruleset twilio.use {
 
   rule get_messages {
     select when twilio messages
-    t:messages(event:attr("message_sid").defaultsTo(""),
-               event:attr("to").defaultsTo(""),
-               event:attr("from").defaultsTo(""))
+    t:messages({"message_sid":event:attr("message_sid").defaultsTo(""),
+                "to":event:attr("to").defaultsTo(""),
+                "from":event:attr("from").defaultsTo("")})
   }
 }
