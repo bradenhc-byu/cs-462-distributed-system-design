@@ -1,9 +1,9 @@
-ruleset twilio.send {
+ruleset twilio.api {
 
   meta {
     author "Braden Hitchcock"
     logging on
-    provides send_sms
+    provides send_sms, messages
     configure using
       account_sid = ""
       auth_token = ""
@@ -11,12 +11,23 @@ ruleset twilio.send {
 
   global{
     send_sms = defaction(to, from, message){
-      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/>>.klog("base url")
+      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/>>.klog("post url")
       http:post(base_url + "Messages", form =
                     {"From":from,
                      "To":to,
                      "Body":message
                     }.klog("form elements"))
+    }
+    messages = defaction(message_sid, to , from){
+      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/Messages>>
+      target = (message_sid != "") => <</#{message_sid}>> | ""
+      query = "?"
+      query = (to == "") => <<#{query}&To=#{to}>> | query
+      query = (from == "") => <<#{query}&From=#{from}>> | query
+      http:get(base_url + target + query) setting(response)
+      fired {
+        log debug <<#{response}>>
+      }
     }
   }
 
