@@ -25,9 +25,6 @@ ruleset twilio.api {
       query = (to == "") => <<#{query}&To=#{to}>> | query
       query = (from == "") => <<#{query}&From=#{from}>> | query
       http:get(base_url + target + query) setting(response)
-      fired {
-        log debug <<#{response}>>
-      }
     }
   }
 
