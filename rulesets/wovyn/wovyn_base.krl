@@ -8,6 +8,6 @@ ruleset wovyn_base {
     
     rule process_heartbeat {
         select when wovyn hearbeat
-        send_directive("heartbeat":{"heartbeat":"lub-dub"})
+        send_directive("heartbeat",{"heartbeat":"lub-dub"})
     }
 }
