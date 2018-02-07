@@ -7,7 +7,7 @@ ruleset wovyn_base {
     }
     
     global {
-      temperature_threshhold = 70
+      temperature_threshold = 70
     }
     
     rule process_heartbeat {
@@ -30,23 +30,23 @@ ruleset wovyn_base {
     rule find_high_temps {
       select when wovyn new_temperature_reading
       pre {
-        violation = event:attr("temperature") > temperature_threshhold
+        violation = event:attr("temperature") > temperature_threshold
       }
       if violation then
-        send_directive("temperature_violation",{"temp":event:attr("temperature"), "threshold":temperature_threshhold})
+        send_directive("temperature_violation",{"temp":event:attr("temperature"), "threshold":temperature_threshold})
       fired{
-        raise wovyn event "temperature_threshhold"
+        raise wovyn event "temperature_threshold"
           attributes {"temperature":event:attr("temperature"), "timestamp":event:attr("timestamp")}
       }
     }
     
     rule threshold_notification {
-      select when wovyn temperature_threshhold
+      select when wovyn temperature_threshold
       pre{
         to = "+17208991356"
         from = "+17206055306"
         message = <<Temperature Violation Detected at #{event:attr("timestamp")}! 
-Threshold: #{temperature_threshhold}, 
+Threshold: #{temperature_threshold}, 
 Current: #{event:attr("temperature")}>>
       }
       send_directive("threshold notiication sent")
