@@ -3,20 +3,22 @@ ruleset temperature_store {
         author "Braden Hitchcock"
         logging on
         description <<Persistent storage for temperature sensor results>>
+        provides temperature, threshold_violations, inrange_temperatures
+        shares temperatures, threshold_violations, inrange_temperatures
     }
 
     global {
-        temperature = function(){
-            ent:temperatures
+        temperatures = function(){
+            ent:temperatures.defaultsTo({})
         }
         threshold_violations = function(){
-            ent:thresh_temperatures
+            ent:thresh_temperatures.defaultsTo({})
         }
         inrange_temperatures = function(){
-            ent:temperatures.filter(function(x){not ent:thresh_temperatures >< x})
+            ent:temperatures.defaultsTo({}).filter(function(v,k){ent:thresh_temperatures{k}.isnull()})
         }
     }
-
+    
     rule collect_temperatures {
         select when wovyn new_temperature_reading
         pre {
@@ -25,7 +27,7 @@ ruleset temperature_store {
         }
         send_directive("collect_temperatures", {"temperature":temperature, "timestamp":timestamp})
         always {
-            ent:temperatures := ent:temperatures.append([[timestamp, temperature]])
+            ent:temperatures := ent:temperatures.defaultsTo({}).put(timestamp, temperature)
         }
     }
 
@@ -33,12 +35,12 @@ ruleset temperature_store {
         select when wovyn threshold_violation
         pre {
             temperature = event:attr("temperature").klog("threshold violation temperature")
-            timestamp = event:attr("temperature").klog("threshold violation timestamp")
+            timestamp = event:attr("timestamp").klog("threshold violation timestamp")
         }
         send_directive("collect_threshold_violations",
                         {"temperature":temperature,"timestamp":timestamp})
         always {
-            ent:thresh_temperatures := ent:thresh_temperatures.append([[timestamp,temperature]])
+            ent:thresh_temperatures := ent:thresh_temperatures.defaultsTo({}).put(timestamp,temperature)
         }
     }
 
