@@ -27,7 +27,7 @@ ruleset temperature_store {
         }
         send_directive("collect_temperatures", {"temperature":temperature, "timestamp":timestamp})
         always {
-            ent:temperatures := ent:temperatures.defaultsTo([]).add({"timestamp":timestamp, "temperature":temperature})
+            ent:temperatures := ent:temperatures.defaultsTo([]).append([{"timestamp":timestamp, "temperature":temperature}])
         }
     }
 
@@ -40,7 +40,7 @@ ruleset temperature_store {
         send_directive("collect_threshold_violations",
                         {"temperature":temperature,"timestamp":timestamp})
         always {
-            ent:thresh_temperatures := ent:thresh_temperatures.defaultsTo([]).add({"timestamp":timestamp, "temperature":temperature})
+            ent:thresh_temperatures := ent:thresh_temperatures.defaultsTo([]).append([{"timestamp":timestamp, "temperature":temperature}])
         }
     }
 
