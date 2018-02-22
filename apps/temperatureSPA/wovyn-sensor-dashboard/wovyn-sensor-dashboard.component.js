@@ -32,7 +32,8 @@ angular.module('wovynSensorDashboard').component('wovynSensorDashboard', {
 		}
 
 		this.updateProfile = function(){
-			$http.post(saveUpdatesUrl, _cmpnt.profile).then(
+			var data = JSON.stringify(_cmpnt.profile);
+			$http.post(saveUpdatesUrl, data, {headers: {'Content-Type': 'application/json'}}).then(
 				function success(response){
 					alert("Update success!");
 				},

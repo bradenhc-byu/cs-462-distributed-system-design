@@ -59,7 +59,12 @@ ruleset sensor_profile {
 			ent:contact := contact;
 			ent:threshold := threshold
 		} else {
-			send_directive("update_profile", {"message": "ERROR: failed to update profile due to incorrectly formatted request"})
+			raise sensor event "update_profile_failure" attributes {}
 		}
+	}
+
+	rule update_profile_failure {
+		select when sensor update_profile_failure
+		send_directive("update_profile", {"message": "ERROR: failed to update profile due to incorrectly formatted request"})
 	}
 }
