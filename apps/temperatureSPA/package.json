@@ -2,8 +2,9 @@
   "name": "temperature-spa",
   "version": "1.0.0",
   "description": "A single page application for collecting and monitoring temperature readings from a Wovyn temperature sensor using a Pico engine backend",
-  "main": "index.js",
+  "main": "app.module.js",
   "scripts": {
+  	"start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Braden Hitchcock <hitchcock.braden@gmail.com>",

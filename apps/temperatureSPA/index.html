@@ -1,14 +1,17 @@
 <!doctype html>
-<html lang="en" ng-app>
-  <head>
-    <meta charset="utf-8">
-    <title>My HTML File</title>
-    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
-    <script src="bower_components/angular/angular.js"></script>
-  </head>
-  <body>
-
-    <p>Nothing here {{'yet' + '!'}}</p>
-
-  </body>
+<html lang="en" ng-app="temperatureApp">
+<head>
+	<meta charset="utf-8"/>
+	<title>Temperature SPA</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+	<script src="app.module.js"></script>
+	<script src="temperature-list/temperature-list.module.js"></script>
+	<script src="temperature-list/temperature-list.component.js"></script>
+	<script src="current-temperature/current-temperature.module.js"></script>
+	<script src="current-temperature/current-temperature.component.js"></script>
+</head>
+<body>
+	<current-temperature></current-temperature>
+	<temperature-list></temperature-list>
+</body>
 </html>

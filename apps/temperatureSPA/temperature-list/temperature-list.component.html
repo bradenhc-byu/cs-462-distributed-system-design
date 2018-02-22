@@ -1,0 +1,19 @@
+<style>
+	table.temperature-list tr {
+		text-align: center;
+	}
+</style>
+<table class="temperature-list">
+	<thead>
+		<tr>
+			<th>Date/Time</th>
+			<th>Temperature (F)</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="reading in $ctrl.temperatures">
+			<td>{{reading.timestamp}}</td>
+			<td>{{reading.temperature}}</td>
+		</tr>
+	</tbody>
+</table>

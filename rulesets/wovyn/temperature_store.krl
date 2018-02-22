@@ -9,13 +9,13 @@ ruleset temperature_store {
 
     global {
         temperatures = function(){
-            ent:temperatures.defaultsTo({})
+            ent:temperatures.defaultsTo([])
         }
         threshold_violations = function(){
-            ent:thresh_temperatures.defaultsTo({})
+            ent:thresh_temperatures.defaultsTo([])
         }
         inrange_temperatures = function(){
-            ent:temperatures.defaultsTo({}).filter(function(v,k){ent:thresh_temperatures{k}.isnull()})
+            ent:temperatures.defaultsTo([]).filter(function(v){ent:thresh_temperatures >< v{"timestamp"}})
         }
     }
     
@@ -27,7 +27,7 @@ ruleset temperature_store {
         }
         send_directive("collect_temperatures", {"temperature":temperature, "timestamp":timestamp})
         always {
-            ent:temperatures := ent:temperatures.defaultsTo({}).put(timestamp, temperature)
+            ent:temperatures := ent:temperatures.defaultsTo([]).add({"timestamp":timestamp, "temperature":temperature})
         }
     }
 
@@ -40,7 +40,7 @@ ruleset temperature_store {
         send_directive("collect_threshold_violations",
                         {"temperature":temperature,"timestamp":timestamp})
         always {
-            ent:thresh_temperatures := ent:thresh_temperatures.defaultsTo({}).put(timestamp,temperature)
+            ent:thresh_temperatures := ent:thresh_temperatures.defaultsTo([]).add({"timestamp":timestamp, "temperature":temperature})
         }
     }
 
