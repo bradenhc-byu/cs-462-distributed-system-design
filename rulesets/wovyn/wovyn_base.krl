@@ -47,7 +47,7 @@ ruleset wovyn_base {
         to = sp:contactNumber()
         from = sp:contactSource
         message = <<Temperature Violation Detected at #{event:attr("timestamp")}! 
-Threshold: #{ent:threshold.defaultsTo(thresholdDefault)}, 
+Threshold: #{sp:threshold()}, 
 Current: #{event:attr("temperature")}>>
       }
       send_directive("threshold notiication sent", {"body":"The threshold notification has been sent"})

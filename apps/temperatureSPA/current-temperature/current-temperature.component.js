@@ -29,5 +29,8 @@ angular.module('currentTemperature').component('currentTemperature', {
 				currentTemperature = undefined;
 			}
 		};
+
+		// Initialize
+		this.getCurrentTemperature();
 	}]
 });

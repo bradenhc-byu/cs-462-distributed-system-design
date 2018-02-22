@@ -35,5 +35,8 @@ angular.module('thresholdViolations').component('thresholdViolations', {
 				thresholdViolations = undefined;
 			}
 		};
+
+		// Initialize
+		this.getThresholdViolations();
 	}]
 });

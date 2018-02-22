@@ -1,10 +1,49 @@
+<style>
+	.wovyn-sensor-dashboard-wrapper {
+		display: grid;
+		grid-template-columns: 30% 10% auto 45%;
+		grid-template-rows: repeat(8, 30px);
+		grid-gap: 10px;
+	}
+	.wsd-button {
+		grid-column-start: 2;
+		grid-column-end: 4;
+		grid-row: 7;
+	}
+	.return-button {
+		grid-column-start: 2;
+		grid-column-end: 4;
+		grid-row: 8;
+	}
+	button {
+		cursor: pointer;
+	}
+	label {
+		grid-column: 2;
+		text-align: right;
+	}
+	input {
+		grid-column: 3;
+	}
+	h3 {
+		margin-top: 0px;
+		text-align: center;
+		grid-column-start: 2;
+		grid-column-end: 4;
+		grid-row: 1;
+	}
+</style>
 <div class="wovyn-sensor-dashboard-wrapper">
-	<label>Sensor Name: <input type="text" name="name" ng-model="$ctrl.profile.name"/></label><br/>
-	<label>Location Latitude: <input type="text" name="latitude" ng-model="$ctrl.profile.location.latitude"/></label><br/>
-	<label>Location Longitude: <input type="number" name="longitude" ng-model="$ctrl.profile.location.longitude"/></label><br/>
-	<label>Contact Number: <input type="text" name="contact" ng-model="$ctrl.profile.contact"></label><br/>
-	<label>Sensor Threshold: <input type="number" name="threshold" ng-model="$ctrl.profile.threshold"></label><br/>
+	<h3>Profile Configuration</h3><br/>
+	<label>Sensor Name:</label><input type="text" name="name" ng-model="$ctrl.profile.name"/><br/>
+	<label>Location Latitude:</label><input type="number" name="latitude" ng-model="$ctrl.profile.location.latitude"/><br/>
+	<label>Location Longitude:</label><input type="number" name="longitude" ng-model="$ctrl.profile.location.longitude"/><br/>
+	<label>Contact Number:</label><input type="text" name="contact" ng-model="$ctrl.profile.contact"><br/>
+	<label>Sensor Threshold:</label><input type="number" name="threshold" ng-model="$ctrl.profile.threshold"><br/>
 	<button class="wsd-button" id="buttonUpdateProfile" ng-click="$ctrl.updateProfile()">
 		Save Changes
+	</button>
+	<button class="return-button" id="buttonReturn" onclick="location.href = '/';"">
+		Return to Temperature Readings
 	</button>
 </div>

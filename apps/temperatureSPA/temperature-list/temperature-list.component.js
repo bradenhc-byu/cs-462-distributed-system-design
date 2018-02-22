@@ -35,5 +35,8 @@ angular.module('temperatureList').component('temperatureList', {
 				liveTemperatures = undefined;
 			}
 		};
+
+		// Initialize
+		this.getLiveTemperatures();
 	}]
 });
