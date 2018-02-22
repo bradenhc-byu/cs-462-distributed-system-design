@@ -1,18 +1,18 @@
 <style>
-	.temperature-list-flex {
+	.threshold-violation-list-flex {
 		display: flex;
 		justify-content: center;
 	}
-	table.temperature-list tr {
+	table.threshold-violation-list tr {
 		text-align: center;
 	}
-	h3.temperature-list-header {
+	h3.threshold-violation-list-header {
 		text-align: center;
 	}
 </style>
-<h3 class="temperature-list-header">Recent Readings</h3>
-<div class="temperature-list-flex">
-	<table class="temperature-list">
+<h3 class="threshold-violation-list-header">Threshold Violations</h3>
+<div class="threshold-violation-list-flex">
+	<table class="threshold-violation-list">
 		<thead>
 			<tr>
 				<th>Date/Time</th>
@@ -20,7 +20,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr ng-repeat="reading in $ctrl.temperatures">
+			<tr ng-repeat="reading in $ctrl.violations">
 				<td>{{reading.timestamp}}</td>
 				<td>{{reading.temperature}}</td>
 			</tr>

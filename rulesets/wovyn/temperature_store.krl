@@ -15,7 +15,7 @@ ruleset temperature_store {
             ent:thresh_temperatures.defaultsTo([])
         }
         inrange_temperatures = function(){
-            ent:temperatures.defaultsTo([]).filter(function(v){ent:thresh_temperatures >< v{"timestamp"}})
+            ent:temperatures.defaultsTo([]).filter(function(v){ent:thresh_temperatures.index(v) == -1})
         }
     }
     

@@ -16,17 +16,18 @@ angular.module('temperatureList').component('temperatureList', {
 				$http.get(url).then(
 					function success(response){
 						_this.temperatures = [];
-						for(var k in response.data){
-							_this.temperatures.push({timestamp: k, temperature: response.data[k]})
-							if(_this.temperatures.length == 4) break;
+						for(i = 1; i < 10; i++){
+							if(response.data.length - i < 0) break;
+							_this.temperatures.push(response.data[response.data.length - i])
 						}
 					},
 					function error(response){
+						_this.temperatures = [];
 						_this.temperatures.push({timestamp: "Fail", temperature: "Fail"})
 				});		
 		};
 
-		liveTemperatures = $interval(this.getLiveTemperatures, 1000);
+		liveTemperatures = $interval(this.getLiveTemperatures, 3000);
 
 		this.$onDestroy = function(){
 			if(angular.isDefined(liveTemperatures)){

@@ -2,5 +2,7 @@
 angular.module('temperatureApp',[
 	// List app dependencies here
 	'temperatureList',
-	'currentTemperature'
+	'currentTemperature',
+	'thresholdViolations',
+	'wovynSensorDashboard'
 ]);
