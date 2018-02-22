@@ -27,12 +27,12 @@ angular.module('wovynSensorDashboard').component('wovynSensorDashboard', {
 				_cmpnt.profile = response.data;
 			},
 			function error(response){
-				alert("Failed to retrieve profile information")
+				alert("Failed to retrieve profile information");
 			});
 		}
 
 		this.updateProfile = function(){
-			$http.post(saveUpdatesUrl, _cmpnt.profile}).then(
+			$http.post(saveUpdatesUrl, _cmpnt.profile).then(
 				function success(response){
 					alert("Update success!");
 				},

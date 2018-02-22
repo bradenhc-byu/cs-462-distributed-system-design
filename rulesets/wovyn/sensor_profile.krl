@@ -40,11 +40,11 @@ ruleset sensor_profile {
 	rule update_profile {
 		select when sensor profile_updated
 		pre {
-			name = event:attr("name")
-			latitude = event:attr("location"){"latitude"}.as("Number")
-			longitude = event:attr("location"){"longitude"}.as("Number")
-			contact = event:attr("contact")
-			threshold = event:attr("threshold").as("Number")
+			name = event:attr("name").klog("name")
+			latitude = event:attr("location"){"latitude"}.as("Number").klog("location latitude")
+			longitude = event:attr("location"){"longitude"}.as("Number").klog("location longitude")
+			contact = event:attr("contact").klog("contact number")
+			threshold = event:attr("threshold").as("Number").klog("threshold")
 			exists = not name.isnull() && not latitude.isnull() && not longitude.isnull() && not contact.isnull() && not threshold.isnull()
 		}
 		if exists then send_directive("update_profile", {"message": "SUCCESS: update request received with the following values:",
