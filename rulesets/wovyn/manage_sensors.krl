@@ -55,9 +55,10 @@ ruleset manage_sensors {
 		select when wrangler child_initialized
 		pre {
 			sensor = {"id": event:attr("id"), "eci": event:attr("eci")}
-			sensor_id = event:attr("rs_attrs"){"sensor_id"}
+			sensor_id = event:attr("rs_attrs"){"sensor_id"}.klog("initialization complete for sensor")
+			valid = not sensor_id.isnull()
 		}
-		if sensor_id.klog("initialization complete for sensor") then
+		if valid then
 			event:send(
 				{"eci": sensor{"eci"}, "eid": "initialize-profile",
 				 "domain": "sensor", "type": "profile_updated",
