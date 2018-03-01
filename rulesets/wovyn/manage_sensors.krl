@@ -3,12 +3,14 @@ ruleset manage_sensors {
 		author "Braden Hitchcock"
 		description <<Main sensor management for other Wovyn TS picos>>
 		logging on
-		shares __testing
+		use module io.picolabs.wrangler alias wrangler
+		shares __testing, temperatures
 	}
 
 	global {
 		// Establish some test cases 
-		__testing = { "events" : [ {"domain": "sensor", "type":"new_sensor", "attrs": ["sensor_id"]},
+		__testing = { "queries": [ {"name": "temperatures"} ],
+					  "events" : [ {"domain": "sensor", "type":"new_sensor", "attrs": ["sensor_id"]},
 								   {"domain": "sensor", "type":"unneeded_sensor", "attrs":["sensor_id"]}]
 					}
 		// Establish some default entity variable definitions
@@ -19,6 +21,10 @@ ruleset manage_sensors {
 		// Automatically generates a human readable name from a provided id
 		createNameFromID = function(id){
 			"Sensor " + id + " Pico"
+		}
+		// Retrieve all of the temperatures for the children 
+		temperatures = function(){
+			wrangler:children()
 		}
 	}
 
