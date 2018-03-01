@@ -24,7 +24,15 @@ ruleset manage_sensors {
 		}
 		// Retrieve all of the temperatures for the children 
 		temperatures = function(){
-			wrangler:children()
+			build_temperatures = function(child_list){
+				( not child_list.length() == 0 ) =>
+						build_temperatures(child_list.tail()).put(child_list.head(){"name"},
+							http:get(meta:host + "/sky/cloud/" + child_list.head(){"eci"} +
+								     "/temperature_store/temperatures"){"content"}.decode())
+					|
+						{}
+			};
+			build_temperatures(wrangler:children())
 		}
 	}
 
