@@ -23,7 +23,7 @@ ruleset manage_sensors {
 		select when sensor new_sensor
 		pre {
 			sensor_id = event:attr("id").klog("sensor id")
-			exists = ent:sensors >< sensor_id
+			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_id
 		}
 		if exists then
 			send_directive("sensor_ready", {"sensor_id":sensor_id, "exists":true})
@@ -36,7 +36,7 @@ ruleset manage_sensors {
 		select when sensor new_sensor
 		pre {
 			sensor_id = event:attr("id").klog("sensor id")
-			exists = ent:sensors >< sensor_id
+			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_id
 		}
 		if not exists then
 			noop()
@@ -56,9 +56,9 @@ ruleset manage_sensors {
 		pre {
 			sensor = {"id": event:attr("id"), "eci": event:attr("eci")}
 			sensor_id = event:attr("rs_attrs"){"sensor_id"}.klog("initialization complete for sensor")
-			valid = not sensor_id.isnull().klog("valid request")
+			valid = not sensor_id.isnull()
 		}
-		if valid then
+		if valid.klog("valid request") then
 			event:send(
 				{"eci": sensor{"eci"}, "eid": "initialize-profile",
 				 "domain": "sensor", "type": "profile_updated",
@@ -71,7 +71,7 @@ ruleset manage_sensors {
 			)
 		fired {
 			ent:sensors := ent:sensors.defaultsTo(defaultSensors);
-			ent:sensors{[sensor_id]} := sensor
+			ent:sensors{sensor_id} := sensor
 		}
 	}
 
@@ -81,14 +81,14 @@ ruleset manage_sensors {
 		select when sensor unneeded_sensor
 		pre {
 			sensor_id = event:attr("sensor_id")
-			exists = ent:sensors >< sensor_id
+			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_id
 		}
 		if exists.klog("sensor to delete exists") then
 			send_directive("deleting_sensor", {"sensor_id": sensor_id})
 		fired {
 			raise wrangler event "child_deletion"
 				attributes {"name": createNameFromID(sensor_id)};
-			clear ent:sensors{[sensor_id]}
+			clear ent:sensors{sensor_id}
 		}
 	}
 }
