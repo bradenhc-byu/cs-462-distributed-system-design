@@ -43,11 +43,12 @@ ruleset manage_sensors {
 	rule create_new_sensor {
 		select when sensor new_sensor
 		pre {
-			sensor_id = event:attr("id").klog("sensor id")
+			sensor_id = event:attr("sensor_id").klog("sensor id")
 			sensor_name = createNameFromID(sensor_id)
+			valid = not sensor_id.isnull()
 			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_name
 		}
-		if not exists then
+		if not exists && valid then
 			noop()
 		fired {
 			raise wrangler event "child_creation"
