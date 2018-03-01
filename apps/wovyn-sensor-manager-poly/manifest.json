@@ -1,0 +1,7 @@
+{
+  "name": "Wovyn Temperature Sensor Manager",
+  "short_name": "wovyn-sensor-manager-poly",
+  "description": "Allows us to interact with Wovyn temperature sensors that give off temperature reading events handled by a pico engine",
+  "start_url": "/",
+  "display": "standalone"
+}

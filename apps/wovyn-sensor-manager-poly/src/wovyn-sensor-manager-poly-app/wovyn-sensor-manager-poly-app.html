@@ -1,0 +1,102 @@
+<link rel="import" href="/bower_components/polymer/polymer-element.html">
+
+<!--  Loading other dependencies -->
+<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="/bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="/bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="/bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="/bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="/bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="/bower_components/app-layout/demo/sample-content.html">
+
+<dom-module id="wovyn-sensor-manager-poly-app">
+  <template>
+    <style>
+      :host {
+        --app-primary-color: #4285f4;
+        --app-secondary-color: black;
+
+        display: block;
+      }
+      app-header {
+        background-color: #002e5d;
+        color: #fff;
+        font-family: 'Roboto', 'Noto', sans-serif;
+      }
+      paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
+      app-drawer-layout {
+        font-family: 'Roboto', 'Noto', sans-serif;
+      }
+      app-drawer-layout:not([narrow]) [drawer-toggle] {
+        display: none;
+      }
+      .drawer-list a.iron-selected {
+        color: black;
+        font-weight: bold;
+      }
+    </style>
+
+    <!-- Set up routing within the application -->
+    <app-location 
+      route="{{route}}">
+    </app-location>
+    <app-route 
+      route="{{route}}"
+      pattern="[[rootPath]]:page"
+      data="{{routeData}}"
+      tail="{{subroute}}">
+    </app-route>
+
+    <app-drawer-layout fullbleed narrow="{{narrow}}">
+      <!-- Drawer Content -->
+      <app-drawer slot="drawer">
+        <app-toolbar>Sensors</app-toolbar>
+        <iron-selector selected="[[sensor]]" attr-for-selected="name" class="drawer-list" role="navigation">
+
+        </iron-selector>
+      </app-drawer>
+      <!-- Main Content -->
+      <app-header-layout>
+        <!-- Header -->
+        <app-header slot="header" reveals effects="waterfall">
+          <app-toolbar>
+            <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
+            <div main-title>Wovyn Sensor Manager</div>
+          </app-toolbar>
+        </app-header>
+
+        <!-- Pages -->
+      
+      </app-header-layout>
+    </app-drawer-layout>
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class WovynSensorManagerPolyApp extends Polymer.Element {
+      static get is() { return 'wovyn-sensor-manager-poly-app'; }
+      static get properties() {
+        return {
+          name: {
+            type: String,
+            value: 'wovyn-sensor-manager-poly-app'
+          },
+          picoEngineServer: {
+            type: String,
+            value: 'http://localhost:8080'
+          }
+        };
+      }
+    }
+
+    window.customElements.define(WovynSensorManagerPolyApp.is, WovynSensorManagerPolyApp);
+  </script>
+</dom-module>
