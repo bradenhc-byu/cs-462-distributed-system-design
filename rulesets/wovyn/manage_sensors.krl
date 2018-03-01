@@ -23,10 +23,13 @@ ruleset manage_sensors {
 		select when sensor new_sensor
 		pre {
 			sensor_id = event:attr("id").klog("sensor id")
-			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_id
+			sensor_name = createNameFromID(sensor_id)
+			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_name
 		}
 		if exists then
-			send_directive("sensor_ready", {"sensor_id":sensor_id, "exists":true})
+			send_directive("sensor_ready", {"sensor_id":sensor_id, 
+											"name": sensor_name,
+										    "exists":true})
 	}
 
 	// Rule for adding a new sensor that doesn't already exist in the map
@@ -36,13 +39,14 @@ ruleset manage_sensors {
 		select when sensor new_sensor
 		pre {
 			sensor_id = event:attr("id").klog("sensor id")
-			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_id
+			sensor_name = createNameFromID(sensor_id)
+			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_name
 		}
 		if not exists then
 			noop()
 		fired {
 			raise wrangler event "child_creation"
-				attributes {"name": createNameFromID(sensor_id), 
+				attributes {"name": sensor_name, 
 							"color": "#cccccc",
 							"sensor_id": sensor_id,
 							"rids": ["sensor_profile", "wovyn_base", "temperature_store"]}
@@ -56,13 +60,14 @@ ruleset manage_sensors {
 		pre {
 			sensor = {"id": event:attr("id"), "eci": event:attr("eci")}
 			sensor_id = event:attr("rs_attrs"){"sensor_id"}.klog("initialization complete for sensor")
+			sensor_name = createNameFromID(sensor_id)
 			valid = not sensor_id.isnull()
 		}
 		if valid.klog("valid request") then
 			event:send(
 				{"eci": sensor{"eci"}, "eid": "initialize-profile",
 				 "domain": "sensor", "type": "profile_updated",
-				 "attrs": {"name": createNameFromID(sensor_id),
+				 "attrs": {"name": sensor_name,
 				 		   "contact": defaultContactNumber,
 				 		   "location": defaultLocation,
 				 		   "threshold": defaultThreshold 
@@ -71,7 +76,7 @@ ruleset manage_sensors {
 			)
 		fired {
 			ent:sensors := ent:sensors.defaultsTo(defaultSensors);
-			ent:sensors{sensor_id} := sensor
+			ent:sensors{sensor_name} := sensor
 		}
 	}
 
@@ -81,14 +86,15 @@ ruleset manage_sensors {
 		select when sensor unneeded_sensor
 		pre {
 			sensor_id = event:attr("sensor_id")
-			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_id
+			sensor_name = createNameFromID(sensor_id)
+			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_name
 		}
 		if exists.klog("sensor to delete exists") then
-			send_directive("deleting_sensor", {"sensor_id": sensor_id})
+			send_directive("deleting_sensor", {"name": sensor_name})
 		fired {
 			raise wrangler event "child_deletion"
-				attributes {"name": createNameFromID(sensor_id)};
-			clear ent:sensors{sensor_id}
+				attributes {"name": sensor_name};
+			clear ent:sensors{sensor_name}
 		}
 	}
 }
