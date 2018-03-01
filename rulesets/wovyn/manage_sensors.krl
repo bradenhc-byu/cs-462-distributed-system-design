@@ -26,7 +26,7 @@ ruleset manage_sensors {
 		temperatures = function(){
 			build_temperatures = function(child_list){
 				( not child_list.length() == 0 ) =>
-						build_temperatures(child_list.tail()).put(child_list.head(){"name"},
+						build_temperatures(child_list.tail()).put([child_list.head(){"name"}].klog("adding child data for"),
 							http:get(meta:host + "/sky/cloud/" + child_list.head(){"eci"} +
 								     "/temperature_store/temperatures"){"content"}.decode())
 					|
