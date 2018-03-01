@@ -32,7 +32,7 @@ ruleset manage_sensors {
 					|
 						{}
 			};
-			build_temperatures(wrangler:children(),klog("children"))
+			build_temperatures(wrangler:children().klog("children"))
 		}
 	}
 
