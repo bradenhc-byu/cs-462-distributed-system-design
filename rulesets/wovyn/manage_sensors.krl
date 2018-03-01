@@ -3,9 +3,14 @@ ruleset manage_sensors {
 		author "Braden Hitchcock"
 		description <<Main sensor management for other Wovyn TS picos>>
 		logging on
+		shares __testing
 	}
 
 	global {
+		// Establish some test cases 
+		__testing = { "events" : [ {"domain": "sensor", "type":"new_sensor", "attrs": ["sensor_id"]},
+								   {"domain": "sensor", "type":"unneeded_sensor", "attrs":["sensor_id"]}]
+					}
 		// Establish some default entity variable definitions
 		defaultSensors = {}
 		defaultThreshold = 80
@@ -22,7 +27,7 @@ ruleset manage_sensors {
 	rule sensor_already_exists {
 		select when sensor new_sensor
 		pre {
-			sensor_id = event:attr("id").klog("sensor id")
+			sensor_id = event:attr("sensor_id").klog("sensor id")
 			sensor_name = createNameFromID(sensor_id)
 			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_name
 		}
