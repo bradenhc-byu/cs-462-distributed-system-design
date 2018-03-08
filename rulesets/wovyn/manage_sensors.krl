@@ -18,7 +18,7 @@ ruleset manage_sensors {
 		defaultThreshold = 80
 		defaultLocation = {"longitude": 0.0, "latitude": 0.0}
 		defaultContactNumber = "+17208991356"
-		defaultTwilioEci = "FasuPxQQNfFeRBuxWmCBF8"
+		defaultTwilioEci = meta:eci
 		// Automatically generates a human readable name from a provided id
 		createNameFromID = function(id){
 			"Sensor " + id + " Pico"
