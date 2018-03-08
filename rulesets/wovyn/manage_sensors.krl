@@ -4,12 +4,13 @@ ruleset manage_sensors {
 		description <<Main sensor management for other Wovyn TS picos>>
 		logging on
 		use module io.picolabs.wrangler alias wrangler
-		shares __testing, temperatures
+		shares __testing, temperatures, children
 	}
 
 	global {
 		// Establish some test cases 
-		__testing = { "queries": [ {"name": "temperatures"} ],
+		__testing = { "queries": [ {"name": "temperatures"},
+								   {"name": "children"} ],
 					  "events" : [ {"domain": "sensor", "type":"new_sensor", "attrs": ["sensor_id"]},
 								   {"domain": "sensor", "type":"unneeded_sensor", "attrs":["sensor_id"]}]
 					}
@@ -37,6 +38,10 @@ ruleset manage_sensors {
 						{}
 			};
 			build_temperatures(wrangler:children())
+		}
+		// Get all of the children of the pico 
+		children = function(){
+			wrangler:children()
 		}
 	}
 
