@@ -13,8 +13,8 @@ ruleset sensor_profile {
 		defaultLocation = {"longitude":-111.887991, "latitude":40.666892}
 		defaultContactNumber = "+17208991356"
 		defaultThreshold = 75
-		defaultTwilioEci = engine:listChannels().filter( function(x){x{["name"]} == "main"} )[0]{"id"}
-                            .defaultsTo(engine:listChannels()[0]{"id"}).klog("twilio eci")
+		defaultTwilioEci = engine:listChannels(meta:picoId).filter( function(x){x{["name"]} == "main"} )[0]{"id"}
+                            .defaultsTo(engine:listChannels(meta:picoId)[0]{"id"}).klog("twilio eci")
 		contactSource = "+17206055306"
 		// These are functions that this ruleset can provide to another ruleset when imported as a module.
 		// They give access to the internal entity variabels to other rulesets.
