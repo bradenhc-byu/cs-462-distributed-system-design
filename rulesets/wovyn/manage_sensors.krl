@@ -78,7 +78,7 @@ ruleset manage_sensors {
 							"color": "#cccccc",
 							"sensor_id": sensor_id,
 							"rids": ["sensor_profile", "wovyn_base", "temperature_store",
-									 "twilio.keys, twilio.api, twilio.use"]}
+									 "twilio.keys", "twilio.api", "twilio.use"]}
 		}
 	}
 
