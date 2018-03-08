@@ -18,9 +18,13 @@ ruleset manage_sensors {
 		defaultThreshold = 80
 		defaultLocation = {"longitude": 0.0, "latitude": 0.0}
 		defaultContactNumber = "+17208991356"
+		defaultTwilioEci = "FasuPxQQNfFeRBuxWmCBF8"
 		// Automatically generates a human readable name from a provided id
 		createNameFromID = function(id){
 			"Sensor " + id + " Pico"
+		}
+		sensors = function(){
+			ent:sensors.defaultsTo(defaultSensors)
 		}
 		// Retrieve all of the temperatures for the children 
 		temperatures = function(){
@@ -90,7 +94,8 @@ ruleset manage_sensors {
 				 "attrs": {"name": sensor_name,
 				 		   "contact": defaultContactNumber,
 				 		   "location": defaultLocation,
-				 		   "threshold": defaultThreshold 
+				 		   "threshold": defaultThreshold,
+				 		   "twilio_eci": defaultTwilioEci
 				 		   } 
 				 }
 			)

@@ -44,16 +44,29 @@ ruleset wovyn_base {
     rule threshold_notification {
       select when wovyn threshold_violation
       pre{
-        to = sp:contactNumber()
-        from = sp:contactSource
+        to_number = sp:contactNumber()
+        from_number = sp:contactSource
         message = <<Temperature Violation Detected at #{event:attr("timestamp")}! 
 Threshold: #{sp:threshold()}, 
 Current: #{event:attr("temperature")}>>
       }
-      send_directive("threshold notiication sent", {"body":"The threshold notification has been sent"})
-      fired{
-        raise twilio event "new_message"
-          attributes {"to":to, "from":from, "message":message}.klog("message attributes")
+      if not sp:twilioEci().isnull() then
+        event:send(
+          {"eci": sp:twilioEci() , "eid": "threshold-notification",
+           "domain": "twilio", "type": "new_message",
+           "attrs": {"to":to_number, "from":from_number, "message":message} 
+           }
+        )
+        //send_directive("threshold notiication sent", {"body":"The threshold notification has been sent"})
+      notfired{
+        raise twilio event "threshold_notification_failure"
+          attributes {}
       }
+    }
+
+    rule threshold_notification_failure {
+      select when wovyn threshold_notification_failure
+      send_directive("threshold_notification_failure", {"message": "We failed to send your threshold 
+        violation notification because the ECI for the Twilio Pico was null"})
     }
 }
