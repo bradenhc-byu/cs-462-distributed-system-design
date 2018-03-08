@@ -75,7 +75,7 @@ def main():
 	# Testing
 	picos.set_config("host", "ec2-18-222-84-30.us-east-2.compute.amazonaws.com")
 	picos.set_config("port", 8080)
-	run_pico_based_systems_test("2BvJojn7p4CknkYjS214mK")
+	run_pico_based_systems_test("TbpzFrFxqYMamBcw6WR2wu")
 	return 0
 
 

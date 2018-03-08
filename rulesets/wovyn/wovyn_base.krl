@@ -54,7 +54,7 @@ Current: #{event:attr("temperature")}>>
       if valid then
         send_directive("threshold notiication sent", {"body":"The threshold notification has been sent"})
       fired {
-        raise twilio event new_message
+        raise twilio event "new_message"
           attributes {"to":to_number, "from":from_number, "message":message} 
       }
     }
