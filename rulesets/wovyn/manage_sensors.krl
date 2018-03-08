@@ -19,7 +19,6 @@ ruleset manage_sensors {
 		defaultThreshold = 80
 		defaultLocation = {"longitude": 0.0, "latitude": 0.0}
 		defaultContactNumber = "+17208991356"
-		defaultTwilioEci = engine:listChannels(meta:picoId)[0]{"id"}.klog("twilio eci")
 		// Automatically generates a human readable name from a provided id
 		createNameFromID = function(id){
 			"Sensor " + id + " Pico"
@@ -78,7 +77,8 @@ ruleset manage_sensors {
 				attributes {"name": sensor_name, 
 							"color": "#cccccc",
 							"sensor_id": sensor_id,
-							"rids": ["sensor_profile", "wovyn_base", "temperature_store"]}
+							"rids": ["sensor_profile", "wovyn_base", "temperature_store",
+									 "twilio.keys, twilio.api, twilio.use"]}
 		}
 	}
 

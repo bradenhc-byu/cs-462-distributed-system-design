@@ -13,8 +13,6 @@ ruleset sensor_profile {
 		defaultLocation = {"longitude":-111.887991, "latitude":40.666892}
 		defaultContactNumber = "+17208991356"
 		defaultThreshold = 75
-		defaultTwilioEci = engine:listChannels(meta:picoId).filter( function(x){x{["name"]} == "main"} )[0]{"id"}
-                            .defaultsTo(engine:listChannels(meta:picoId)[0]{"id"}).klog("twilio eci")
 		contactSource = "+17206055306"
 		// These are functions that this ruleset can provide to another ruleset when imported as a module.
 		// They give access to the internal entity variabels to other rulesets.
@@ -38,8 +36,8 @@ ruleset sensor_profile {
 			{"name": ent:name.defaultsTo(defaultSensorName),
 			 "contact": ent:contact.defaultsTo(defaultContactNumber),
 			 "location": ent:location.defaultsTo(defaultLocation),
-			 "threshold": ent:threshold.defaultsTo(defaultThreshold),
-			 "twilio_eci": ent:twilio_eci.defaultsTo(defaultTwilioEci)}
+			 "threshold": ent:threshold.defaultsTo(defaultThreshold)
+			}
 		}
 	}
 
@@ -51,24 +49,21 @@ ruleset sensor_profile {
 			longitude = event:attr("location"){"longitude"}.as("Number").klog("location longitude")
 			contact = event:attr("contact").klog("contact number")
 			threshold = event:attr("threshold").as("Number").klog("threshold")
-			twilio_eci = event:attr("twilio_eci").klog("twilio eci")
 			exists = not name.isnull() && not latitude.isnull() 
 					&& not longitude.isnull() && not contact.isnull() 
-					&& not threshold.isnull() && not twilio_eci.isnull()
+					&& not threshold.isnull()
 		}
 		if exists then send_directive("update_profile", {"message": "SUCCESS: update request received with the following values:",
 														"name": name,
 														"latitude": latitude,
 														"longitude": longitude,
 														"contact": contact,
-														"threshold": threshold,
-														"twilio_eci": twilio_eci})
+														"threshold": threshold})
 		fired {
 			ent:name := name;
 			ent:location := {"longitude": longitude, "latitude": latitude};
 			ent:contact := contact;
 			ent:threshold := threshold;
-			ent:twilio_eci := twilio_eci
 		} else {
 			raise sensor event "update_profile_failure" attributes {}
 		}
