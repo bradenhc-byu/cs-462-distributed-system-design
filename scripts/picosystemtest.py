@@ -41,11 +41,12 @@ def run_pico_based_systems_test(manager_eci, reset=True):
 				print(r)
 				return False
 
-		print("Sending threshold violating heartbeat data to %d" % i)
-		ok, r = picos.post(heartbeat_url, data=mock_heartbeat(100.0))
-		if not ok:
-			print(r)
-			return False
+		if i == 1:
+			print("Sending threshold violating heartbeat data to %d" % i)
+			ok, r = picos.post(heartbeat_url, data=mock_heartbeat(100.0))
+			if not ok:
+				print(r)
+				return False
 
 	# Wait for a bit
 	print("Check results!")

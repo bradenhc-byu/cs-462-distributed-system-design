@@ -5,6 +5,7 @@ ruleset wovyn_base {
         logging on
         description <<Base ruleset for temperature sensor>>
         use module sensor_profile alias sp
+        use module io.picolabs.subscription alias subscription
     }
     
     global {
@@ -58,4 +59,13 @@ Current: #{event:attr("temperature")}>>
           attributes {"to":to_number, "from":from_number, "message":message} 
       }
     }
+
+    // This rule will automatically accept any incoming subscription requests
+    rule auto_accept {
+    select when wrangler inbound_pending_subscription_added
+    fired {
+      raise wrangler event "pending_subscription_approval"
+        attributes event:attrs
+    }
+  }
 }

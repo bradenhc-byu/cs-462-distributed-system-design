@@ -42,6 +42,10 @@ ruleset manage_sensors {
 		children = function(){
 			wrangler:children()
 		}
+		// Get the wellKnown_Rx of a child pico 
+		wellknown_rx = function(id){
+			engine:listChildren(id).filter(function(c){c{"name"} == "wellKnown_Rx"})[0]{"id"}
+		}
 	}
 
 	// Rule for handling when a user tries to add a new sensor that has the same
@@ -78,7 +82,8 @@ ruleset manage_sensors {
 							"color": "#cccccc",
 							"sensor_id": sensor_id,
 							"rids": ["sensor_profile", "wovyn_base", "temperature_store",
-									 "twilio.keys", "twilio.api", "twilio.use"]}
+									 "twilio.keys", "twilio.api", "twilio.use",
+									 "io.picolabs.subscription"]}
 		}
 	}
 
@@ -106,7 +111,33 @@ ruleset manage_sensors {
 			)
 		fired {
 			ent:sensors := ent:sensors.defaultsTo(defaultSensors);
-			ent:sensors{sensor_name} := sensor
+			ent:sensors{sensor_name} := sensor;
+			// Now that we have stored it, we need to initiate a subscription 
+			raise sensor event "subscribe_to_child"
+				attributes {
+					"child": {
+						"id": sensor{"id"}, 
+						"eci": wellknown_rx(sensor{"id"})
+					}
+				}
+		}
+	}
+
+	// Rule for creating a subscription from this manager pico to a newly created child pico 
+	rule create_subscription {
+		select when sensor subscribe_to_child
+		pre {
+			child = event:attr("child")
+		}
+		if not child.isnull() then noop()
+		fired {
+			raise wrangler event "subscription" attributes
+				{ "name" : "sensor-" + child{"id"},
+		          "Rx_role": "sensor",
+		          "Tx_role": "manager",
+		          "channel_type": "subscription",
+		          "wellKnown_Tx" : child{"eci"}
+		       }
 		}
 	}
 
