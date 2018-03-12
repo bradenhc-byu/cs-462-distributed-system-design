@@ -4,6 +4,7 @@ ruleset manage_sensors {
 		description <<Main sensor management for other Wovyn TS picos>>
 		logging on
 		use module io.picolabs.wrangler alias wrangler
+		use module io.picolabs.subscription alias subscription
 		shares __testing, temperatures, children
 	}
 
@@ -44,6 +45,7 @@ ruleset manage_sensors {
 		}
 		// Get the wellKnown_Rx of a child pico 
 		wellknown_rx = function(id){
+
 			engine:listChildren(id).filter(function(c){c{"name"} == "wellKnown_Rx"})[0]{"id"}
 		}
 	}
@@ -117,7 +119,7 @@ ruleset manage_sensors {
 				attributes {
 					"child": {
 						"id": sensor{"id"}, 
-						"eci": wellknown_rx(sensor{"id"})
+						"eci": subscription:wellKnown_Rx(sensor{"id"})
 					}
 				}
 		}
