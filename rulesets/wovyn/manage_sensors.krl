@@ -24,6 +24,15 @@ ruleset manage_sensors {
 		createNameFromID = function(id){
 			"Sensor " + id + " Pico"
 		}
+		// Returns the list of sensors registered with the sensor manager. The sensors are stored 
+		// as a map in the following format:
+		// {
+		// 	"<pico id>": {
+		//					"id": "<sensor id>",
+		//					"eci": "<child eci>",
+		//					"Tx": "<child subscription eci>"
+		// 				 }
+		// }
 		sensors = function(){
 			ent:sensors.defaultsTo(defaultSensors)
 		}
@@ -45,7 +54,6 @@ ruleset manage_sensors {
 		}
 		// Get the wellKnown_Rx of a child pico 
 		wellknown_rx = function(id){
-
 			engine:listChildren(id).filter(function(c){c{"name"} == "wellKnown_Rx"})[0]{"id"}
 		}
 	}
@@ -57,7 +65,9 @@ ruleset manage_sensors {
 		pre {
 			sensor_id = event:attr("sensor_id").klog("sensor id")
 			sensor_name = createNameFromID(sensor_id)
-			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_name
+			exists = ent:sensors.defaultsTo(defaultSensors)
+									.filter(function(x){x{"name"} == sensor_name})
+									.keys().length() != 0
 		}
 		if exists then
 			send_directive("sensor_ready", {"sensor_id":sensor_id, 
@@ -74,7 +84,9 @@ ruleset manage_sensors {
 			sensor_id = event:attr("sensor_id").klog("sensor id")
 			sensor_name = createNameFromID(sensor_id)
 			valid = not sensor_id.isnull()
-			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_name
+			exists = ent:sensors.defaultsTo(defaultSensors)
+									.filter(function(x){x{"name"} == sensor_name})
+									.keys().length() != 0
 		}
 		if not exists && valid then
 			noop()
@@ -90,69 +102,46 @@ ruleset manage_sensors {
 	}
 
 	// Rule for storing a fully initialized sensor in the pico's entity variable
-	// Before the sensor is stored, its default profile values will be set by the manager
-	rule store_new_sensor {
+	// After the sensor is stored, an event to create a subscription to the child will be raised
+	rule store_child_sensor {
 		select when wrangler child_initialized
 		pre {
-			sensor = {"id": event:attr("id"), "eci": event:attr("eci")}
+			sensor_pico_id = event:attr("id")
+			sensor_pico_eci = event:attr("eci")
 			sensor_id = event:attr("rs_attrs"){"sensor_id"}.klog("initialization complete for sensor")
-			sensor_name = createNameFromID(sensor_id)
 			valid = not sensor_id.isnull()
 		}
-		if valid.klog("valid request") then
-			event:send(
-				{"eci": sensor{"eci"}, "eid": "initialize-profile",
-				 "domain": "sensor", "type": "profile_updated",
-				 "attrs": {"name": sensor_name,
-				 		   "contact": defaultContactNumber,
-				 		   "location": defaultLocation,
-				 		   "threshold": defaultThreshold,
-				 		   "twilio_eci": defaultTwilioEci
-				 		   } 
-				 }
-			)
+		if valid then
+			send_directive("store_child_sensor", {"sensor": sensor, "sensor_id": sensor_id})
 		fired {
+			// First store the child 
 			ent:sensors := ent:sensors.defaultsTo(defaultSensors);
-			ent:sensors{sensor_name} := sensor;
-			// Now that we have stored it, we need to initiate a subscription 
-			raise sensor event "subscribe_to_child"
-				attributes {
-					"child": {
-						"id": sensor{"id"}, 
-						"eci": sensor{"eci"} //subscription:wellKnown_Rx(sensor{"id"}){"id"}
-					}
-				}
-		}
-	}
-
-	// Rule for creating a subscription from this manager pico to a newly created child pico 
-	rule create_subscription {
-		select when sensor subscribe_to_child
-		pre {
-			child = event:attr("child").klog("child wellKnown_Rx")
-		}
-		if not child.isnull() then noop()
-		fired {
+			ent:sensors{sensor_pico_id} := {"id": sensor_id, "eci": sensor_pico_eci};
+			// Raise an event to subscribe to the child pico 
 			raise wrangler event "subscription" attributes
-				{ "name" : "sensor-" + child{"id"},
-		          "Rx_role": "sensor",
-		          "Tx_role": "manager",
+				{ "name" : "sensor-" + sensor_id,
+		          "Rx_role": "manager",
+		          "Tx_role": "sensor",
 		          "channel_type": "subscription",
-		          "wellKnown_Tx" : child{"eci"}
+		          "wellKnown_Tx" : sensor_pico_eci
 		       }
 		}
 	}
 
-	// Once the subscription has been established, we can use it to populate the child pico with
-	// default profile data 
+	// After a subscription to the child has been created, we need to initialize it with default
+	// profile data. 	
 	rule initialize_child_profile {
 		select when wrangler subscription_added
 		pre {
-			subscription = event:attrs.klog("subscription")
-			valid = not subscription.isnull()
+			public_key = event:attr("_Tx_public_key").klog("public key")
+			subscription = subscription:established("Tx_public_key", public_key)[0]
+			valid = not subscription{"Tx"}.isnull()
 		}
-		if valid then
-			send_directive("initialize_child_profile", {"subscription": subscription})
+		if valid.klog("valid request") then
+			noop()
+		fired {
+			ent:sensors{[sensor_name, "Tx"]} := subscription{"Tx"}
+		}
 	}
 
 	// Rule for removing a sensor pico once it is no longer needed. After programmatically 
