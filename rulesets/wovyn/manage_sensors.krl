@@ -40,17 +40,21 @@ ruleset manage_sensors {
 		temperatures = function(){
 			build_temperatures = function(child_list){
 				( child_list.length() != 0 ) =>
-						build_temperatures(child_list.tail()).put([child_list.head(){"name"}],
-							http:get(meta:host + "/sky/cloud/" + child_list.head(){"eci"} +
+						build_temperatures(child_list.tail()).put([createNameFromID(getSensorByTx(child_list.head(){"Tx"}){"id"})],
+							http:get(meta:host + "/sky/cloud/" + child_list.head(){"Tx"} +
 								     "/temperature_store/temperatures"){"content"}.decode())
 					|
 						{}
 			};
-			build_temperatures(wrangler:children())
+			build_temperatures(subscription:established("Tx_role", "sensor"))
 		}
 		// Get all of the children of the pico 
 		children = function(){
 			wrangler:children()
+		}
+		// Returns the child sensor information based on the Tx 
+		getSensorByTx = function(Tx){
+			ent:sensors{engine:getPicoIDByECI(Tx)}
 		}
 	}
 
@@ -157,16 +161,16 @@ ruleset manage_sensors {
 	rule remove_sensor_pico {
 		select when sensor unneeded_sensor
 		pre {
-			sensor_id = event:attr("sensor_id")
-			sensor_name = createNameFromID(sensor_id)
-			exists = ent:sensors.defaultsTo(defaultSensors) >< sensor_name
+			sensor = ent:sensors.defaultsTo(defaultSensors)
+						.filter(function(x){x{"id"} == event:attr("sensor_id")})[0]
+			exists = not sensor.isnull()
 		}
 		if exists.klog("sensor to delete exists") then
-			send_directive("deleting_sensor", {"name": sensor_name})
+			send_directive("deleting_sensor", {"name": createNameFromID(sensor{"id"})})
 		fired {
 			raise wrangler event "child_deletion"
-				attributes {"name": sensor_name};
-			clear ent:sensors{sensor_name}
+				attributes {"name": createNameFromID(sensor{"id"})};
+			clear ent:sensors{engine:getPicoIDByECI(sensor{"eci"})}
 		}
 	}
 }
