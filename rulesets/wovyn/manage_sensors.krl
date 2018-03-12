@@ -129,7 +129,7 @@ ruleset manage_sensors {
 	rule create_subscription {
 		select when sensor subscribe_to_child
 		pre {
-			child = event:attr("child")
+			child = event:attr("child").klog("child wellKnown_Rx")
 		}
 		if not child.isnull() then noop()
 		fired {
