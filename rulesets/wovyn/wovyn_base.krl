@@ -68,4 +68,14 @@ Current: #{event:attr("temperature")}>>
         attributes event:attrs
     }
   }
+
+  rule verify_added_subscription {
+    select when wrangler subscription_added
+    pre {
+      subscription = event:attrs.klog("child subscription object")
+      valid = not subscription.isnull()
+    }
+    if valid then
+      send_directive("verify_added_subscription", {"subscription": subscription})
+  }
 }
