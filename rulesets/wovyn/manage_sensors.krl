@@ -146,9 +146,10 @@ ruleset manage_sensors {
 	// Once the subscription has been established, we can use it to populate the child pico with
 	// default profile data 
 	rule initialize_child_profile {
-		select when wrangler subscription_added name re#sensor#
+		select when wrangler subscription_added 
+					Tx_role re#sensor#
 		pre {
-			subscription = event:attrs
+			subscription = event:attrs.klog("subscription")
 			valid = not subscription.isnull()
 		}
 		if valid then
