@@ -119,7 +119,7 @@ ruleset manage_sensors {
 				attributes {
 					"child": {
 						"id": sensor{"id"}, 
-						"eci": subscription:wellKnown_Rx(sensor{"id"})
+						"eci": subscription:wellKnown_Rx(sensor{"id"}){"id"}
 					}
 				}
 		}
