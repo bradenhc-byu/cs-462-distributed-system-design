@@ -3,7 +3,7 @@ ruleset sensor_profile {
 		author "Braden Hitchcock"
 		description <<This ruleset is responsible for updating configuration of the Wovyn temperature sensor>>
 		logging on
-		provides threshold, contactNumber, location, sensorName, contactSource, twilioEci
+		provides threshold, contactNumber, location, sensorName, contactSource
 		shares profile
 	}
 
@@ -27,9 +27,6 @@ ruleset sensor_profile {
 		}
 		sensorName = function(){
 			ent:name.defaultsTo(defaultSensorName)
-		}
-		twilioEci = function(){
-			ent:twilio_eci.defaultsTo(defaultTwilioEci)
 		}
 		// This function provides all profile information to the caller
 		profile = function(){

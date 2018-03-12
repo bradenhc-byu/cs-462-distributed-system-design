@@ -52,10 +52,6 @@ ruleset manage_sensors {
 		children = function(){
 			wrangler:children()
 		}
-		// Get the wellKnown_Rx of a child pico 
-		wellknown_rx = function(id){
-			engine:listChildren(id).filter(function(c){c{"name"} == "wellKnown_Rx"})[0]{"id"}
-		}
 	}
 
 	// Rule for handling when a user tries to add a new sensor that has the same
@@ -135,12 +131,24 @@ ruleset manage_sensors {
 		pre {
 			public_key = event:attr("_Tx_public_key").klog("public key")
 			subscription = subscription:established("Tx_public_key", public_key)[0]
+			sensor_pico_id = engine:getPicoIDByECI(subscription{"Tx"})
+			sensor_name = createNameFromID(ent:sensors{sensor_pico_id}{"id"})
 			valid = not subscription{"Tx"}.isnull()
 		}
 		if valid.klog("valid request") then
-			noop()
+			event:send(
+				{"eci": subscription{"Tx"}, "eid": "initialize-profile",
+				 "domain": "sensor", "type": "profile_updated",
+				 "attrs": {"name": sensor_name,
+				 		   "contact": defaultContactNumber,
+				 		   "location": defaultLocation,
+				 		   "threshold": defaultThreshold,
+				 		   "twilio_eci": defaultTwilioEci
+				 		   } 
+				 }
+			)
 		fired {
-			ent:sensors{[sensor_name, "Tx"]} := subscription{"Tx"}
+			ent:sensors{sensor_pico_id} := ent:sensors{sensor_pico_id}.put(["Tx"],subscription{"Tx"})
 		}
 	}
 
