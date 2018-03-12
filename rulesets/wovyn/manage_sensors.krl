@@ -119,7 +119,7 @@ ruleset manage_sensors {
 				attributes {
 					"child": {
 						"id": sensor{"id"}, 
-						"eci": subscription:wellKnown_Rx(sensor{"id"}){"id"}
+						"eci": sensor{"eci"} //subscription:wellKnown_Rx(sensor{"id"}){"id"}
 					}
 				}
 		}
@@ -141,6 +141,18 @@ ruleset manage_sensors {
 		          "wellKnown_Tx" : child{"eci"}
 		       }
 		}
+	}
+
+	// Once the subscription has been established, we can use it to populate the child pico with
+	// default profile data 
+	rule initialize_child_profile {
+		select when wrangler subscription_added name re#sensor#
+		pre {
+			subscription = event:attrs
+			valid = not subscription.isnull()
+		}
+		if valid then
+			send_directive("initialize_child_profile", {"subscription": subscription})
 	}
 
 	// Rule for removing a sensor pico once it is no longer needed. After programmatically 
