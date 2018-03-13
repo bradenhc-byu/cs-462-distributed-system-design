@@ -169,7 +169,7 @@ ruleset manage_sensors {
 			sensor_id = event:attr("sensor_id").klog("sensor id")
 			sensor_eci = event:attr("eci").klog("sensor eci")
 			sensor_pico_id = engine:getPicoIDByECI(sensor_eci)
-			valid = not senor_id.isnull() && not sensor_eci.isnull()
+			valid = not sensor_id.isnull() && not sensor_eci.isnull()
 		}
 		if valid.klog("valid sensor introduction") then
 			noop()
