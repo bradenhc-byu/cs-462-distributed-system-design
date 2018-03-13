@@ -109,10 +109,21 @@ ruleset manage_sensors {
 			sensor_pico_id = event:attr("id")
 			sensor_pico_eci = event:attr("eci")
 			sensor_id = event:attr("rs_attrs"){"sensor_id"}.klog("initialization complete for sensor")
+			sensor_name = createNameFromID(sensor_id).klog("sensor name")
 			valid = not sensor_id.isnull()
 		}
 		if valid then
-			send_directive("store_child_sensor", {"sensor": sensor, "sensor_id": sensor_id})
+			event:send(
+				{"eci": sensor_pico_eci, "eid": "initialize-profile",
+				 "domain": "sensor", "type": "profile_updated",
+				 "attrs": {"name": sensor_name,
+				 		   "contact": defaultContactNumber,
+				 		   "location": defaultLocation,
+				 		   "threshold": defaultThreshold,
+				 		   "twilio_eci": defaultTwilioEci
+				 		   } 
+				 }
+			)
 		fired {
 			// First store the child 
 			ent:sensors := ent:sensors.defaultsTo(defaultSensors);
@@ -124,7 +135,7 @@ ruleset manage_sensors {
 		          "Tx_role": "sensor",
 		          "channel_type": "subscription",
 		          "wellKnown_Tx" : sensor_pico_eci
-		       }
+		        }
 		}
 	}
 
@@ -140,19 +151,42 @@ ruleset manage_sensors {
 			valid = not subscription{"Tx"}.isnull()
 		}
 		if valid.klog("valid request") then
-			event:send(
-				{"eci": subscription{"Tx"}, "eid": "initialize-profile",
-				 "domain": "sensor", "type": "profile_updated",
-				 "attrs": {"name": sensor_name,
-				 		   "contact": defaultContactNumber,
-				 		   "location": defaultLocation,
-				 		   "threshold": defaultThreshold,
-				 		   "twilio_eci": defaultTwilioEci
-				 		   } 
-				 }
-			)
+			noop()
 		fired {
 			ent:sensors{sensor_pico_id} := ent:sensors{sensor_pico_id}.put(["Tx"],subscription{"Tx"})
+		}
+	}
+
+	// Rule used for introducing an already existing sensor pico to the sensor manager 
+	rule introduce_existing_sensor {
+		select when sensor introduce_sensor 
+		pre {
+			sensor_id = event:attr("sensor_id").klog("sensor id")
+			sensor_eci = event:attr("eci").klog("sensor eci")
+			sensor_pico_id = engine:getPicoIDByECI(sensor_eci)
+			valid = not senor_id.isnull() && not sensor_eci.isnull()
+		}
+		if valid.klog("valid sensor introduction") then
+			noop()
+		fired {
+			// First store the sensor 
+			ent:sensors := ent:sensors.defaultsTo(defaultSensors);
+			ent:sensors{sensor_pico_id} := {"id": sensor_id, "eci": sensor_eci};
+			// Raise an event to subscribe to the sensor pico 
+			raise wrangler event "subscription" attributes
+				{ "name" : "sensor-" + sensor_id,
+		          "Rx_role": "manager",
+		          "Tx_role": "sensor",
+		          "channel_type": "subscription",
+		          "wellKnown_Tx" : sensor_eci
+		        }
+		}
+		else {
+			raise sensor event "error_detected" attributes
+				{"domain": "sensor",
+				 "event": "introduce_sensor",
+				 "message": "Invalid event attributes. Must include sensor id and eci."
+				}
 		}
 	}
 
@@ -192,5 +226,17 @@ ruleset manage_sensors {
 			raise wrangler event "child_deletion"
 				attributes {"name": sensor_name }	
 		}
+	}
+
+	// Rule for catching and handling errors within the sensor manager pico 
+	rule handle_error {
+		select when sensor error_detected
+		pre {
+			error_domain = event:attr("domain")
+			error_event = event:attr("event")
+			error_message = event:attr("message")
+		}
+		send_directive("error_detected", {"domain": error_domain, "event": error_event,
+										  "message": error_message})
 	}
 }
