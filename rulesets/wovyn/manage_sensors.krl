@@ -162,7 +162,8 @@ ruleset manage_sensors {
 		select when sensor unneeded_sensor
 		pre {
 			sensor = ent:sensors.defaultsTo(defaultSensors)
-						.filter(function(x){x{"id"}.klog("sensors entity id") == event:attr("sensor_id").klog("attribute sensor id")})[0]
+						.filter(function(x){x{"id"} == event:attr("sensor_id")})
+						.values()[0]
 			exists = not sensor.isnull()
 		}
 		if exists.klog("sensor to delete exists") then
