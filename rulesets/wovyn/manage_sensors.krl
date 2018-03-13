@@ -178,8 +178,9 @@ ruleset manage_sensors {
 	rule remove_sensor_pico {
 		select when wrangler subscription_removed
 		pre {
+			removed_Tx = event:attrs{["bus","Tx"]}.klog("removed subscription Tx")
 			sensor = ent:sensors.defaultsTo(defaultSensors)
-						.filter(function(x){x{"Tx"} == event:attr("Tx")})
+						.filter(function(x){x{"Tx"} == removed_Tx})
 						.values()[0].klog("return from subscription removed")
 			exists = not sensor.isnull()
 		}
