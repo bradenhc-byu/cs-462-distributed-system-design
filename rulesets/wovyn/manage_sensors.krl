@@ -156,25 +156,6 @@ ruleset manage_sensors {
 		}
 	}
 
-	// Rule for removing a sensor pico once it is no longer needed. After programmatically 
-	// deleting it from the pico, it will also remove it from the internal entity storage
-	rule remove_sensor_pico {
-		select when sensor unneeded_sensor
-		pre {
-			sensor = ent:sensors.defaultsTo(defaultSensors)
-						.filter(function(x){x{"id"} == event:attr("sensor_id")})
-						.values()[0]
-			exists = not sensor.isnull()
-		}
-		if exists.klog("sensor to delete exists") then
-			send_directive("deleting_sensor", {"name": createNameFromID(sensor{"id"})})
-		fired {
-			raise wrangler event "child_deletion"
-				attributes {"name": createNameFromID(sensor{"id"})};
-			clear ent:sensors{engine:getPicoIDByECI(sensor{"eci"})}
-		}
-	}
-
 	// Rule for removing a child pico subscription when a sensor is no longer needed
 	rule remove_sensor_pico_subscription {
 		select when sensor unneeded_sensor
@@ -189,6 +170,25 @@ ruleset manage_sensors {
 		fired {
 			raise wrangler event "subscription_cancellation"
 				attributes {"Tx": sensor{"Tx"}}
+		}
+	}
+
+	// Rule for removing a sensor pico once it is no longer needed. After programmatically 
+	// deleting it from the pico, it will also remove it from the internal entity storage
+	rule remove_sensor_pico {
+		select when wrangler subscription_removed
+		pre {
+			sensor = ent:sensors.defaultsTo(defaultSensors)
+						.filter(function(x){x{"Tx"} == event:attr("Tx")})
+						.values()[0].klog("return from subscription removed")
+			exists = not sensor.isnull()
+		}
+		if exists.klog("sensor to delete exists") then
+			send_directive("deleting_sensor", {"name": createNameFromID(sensor{"id"})})
+		fired {
+			raise wrangler event "child_deletion"
+				attributes {"name": createNameFromID(ent:sensors{[engine:getPicoIDByECI(sensor{"eci"}), "id"]})};
+			clear ent:sensors{engine:getPicoIDByECI(sensor{"eci"})}
 		}
 	}
 }
