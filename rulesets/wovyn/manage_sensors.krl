@@ -5,7 +5,7 @@ ruleset manage_sensors {
 		logging on
 		use module io.picolabs.wrangler alias wrangler
 		use module io.picolabs.subscription alias subscription
-		shares __testing, temperatures, children
+		shares __testing, temperatures, children, sensors
 	}
 
 	global {
@@ -187,9 +187,10 @@ ruleset manage_sensors {
 		if exists.klog("sensor to delete exists") then
 			send_directive("deleting_sensor", {"name": createNameFromID(sensor{"id"})})
 		fired {
+			clear ent:sensors{engine:getPicoIDByECI(sensor{"eci"})};
 			raise wrangler event "child_deletion"
-				attributes {"name": createNameFromID(ent:sensors{[engine:getPicoIDByECI(sensor{"eci"}), "id"]})};
-			clear ent:sensors{engine:getPicoIDByECI(sensor{"eci"})}
+				attributes {"name": createNameFromID(ent:sensors{[engine:getPicoIDByECI(sensor{"eci"}), "id"]})}
+			
 		}
 	}
 }
