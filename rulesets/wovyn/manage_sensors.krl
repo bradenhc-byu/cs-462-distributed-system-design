@@ -174,4 +174,21 @@ ruleset manage_sensors {
 			clear ent:sensors{engine:getPicoIDByECI(sensor{"eci"})}
 		}
 	}
+
+	// Rule for removing a child pico subscription when a sensor is no longer needed
+	rule remove_sensor_pico_subscription {
+		select when sensor unneeded_sensor
+		pre {
+			sensor = ent:sensors.defaultsTo(defaultSensors)
+						.filter(function(x){x{"id"} == event:attr("sensor_id")})
+						.values()[0]
+			exists = not sensor.isnull()
+		}
+		if exists then
+			send_directive("removing_child_subscription", {"name": createNameFromID(sensor{"id"})})
+		fired {
+			raise wrangler event "subscription_cancellation"
+				attributes {"Tx": sensor{"Tx"}}
+		}
+	}
 }
