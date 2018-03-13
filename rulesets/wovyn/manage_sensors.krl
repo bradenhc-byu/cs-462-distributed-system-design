@@ -11,9 +11,14 @@ ruleset manage_sensors {
 	global {
 		// Establish some test cases 
 		__testing = { "queries": [ {"name": "temperatures"},
-								   {"name": "children"} ],
-					  "events" : [ {"domain": "sensor", "type":"new_sensor", "attrs": ["sensor_id"]},
-								   {"domain": "sensor", "type":"unneeded_sensor", "attrs":["sensor_id"]}]
+								   {"name": "children"},
+								   {"name": "sensors"} ],
+					  "events" : [ {"domain": "sensor", "type":"new_sensor", 
+					  									"attrs": ["sensor_id"]},
+								   {"domain": "sensor", "type":"unneeded_sensor", 
+								   						"attrs":["sensor_id"]},
+								   {"domain": "sensor", "type":"introduce_sensor", 
+								   						"attrs":["sensor_id", "eci"]}]
 					}
 		// Establish some default entity variable definitions
 		defaultSensors = {}
