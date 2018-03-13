@@ -182,6 +182,7 @@ ruleset manage_sensors {
 			sensor = ent:sensors.defaultsTo(defaultSensors)
 						.filter(function(x){x{"Tx"} == removed_Tx})
 						.values()[0].klog("return from subscription removed")
+			sensor_name = createNameFromID(sensor{"id"}).klog("sensor name")
 			exists = not sensor.isnull()
 		}
 		if exists.klog("sensor to delete exists") then
@@ -189,8 +190,7 @@ ruleset manage_sensors {
 		fired {
 			clear ent:sensors{engine:getPicoIDByECI(sensor{"eci"})};
 			raise wrangler event "child_deletion"
-				attributes {"name": createNameFromID(ent:sensors{[engine:getPicoIDByECI(sensor{"eci"}), "id"]})}
-			
+				attributes {"name": sensor_name }	
 		}
 	}
 }
