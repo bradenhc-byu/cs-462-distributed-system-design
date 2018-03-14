@@ -58,7 +58,7 @@ ruleset sensor_notifications {
 			send_directive("threshold_notification", {"status": "SUCCESS",
 													  "message": message})
 		fired {
-			raise twilio event "send_new_sms" attributes
+			raise twilio event "new_message" attributes
 				{ "to": ent:profile.defaultsTo(defaultProfile){"destination_number"},
 				  "from": ent:profile.defaultsTo(defaultProfile){"source_number"},
 				  "message": message }
