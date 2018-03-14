@@ -1,15 +1,21 @@
 // TODO: This is currently just a stub for the service. Services still need to be implemented
+/**
+ * Pico Discovery Service
+ * 
+ */
 ruleset pico.discovery {
 	meta {
 		name "Pico Discovery Service"
 		description <<
 			Core Pico Discovery Service Module
-			[ use module pico.discovery alias discovery ]
+			[ example usage :                               ]
+			[     use module pico.discovery alias discovery ]
 			Discovery services are not currently built in to the pico engine core. This module has
 			been developed to assist in the discovery of picos by their properties. It provides the
 			following:
 				- Service Registration
 				- Service Discovery
+				- Service Subscription
 			Picos MUST be explicity registered with this module in order to be discoverable by
 			other picos.
 
@@ -19,7 +25,8 @@ ruleset pico.discovery {
 		>>
 		author "Braden Hitchcock"
 		logging on
-
+		provides register, locate, subscribe
+		shares __testing, register, locate, subscribe
 	}
 
 	global {
@@ -27,9 +34,9 @@ ruleset pico.discovery {
 		__testing = { "queries": [],
 					  "events": []}
 		//
-		// -----------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------
 		// FUNCTIONS - available via module inclusion or the Sky Cloud API
-		// -----------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------
 		//
 		// discovery:register()
 		//
@@ -42,8 +49,14 @@ ruleset pico.discovery {
 		locate = function(){
 
 		}
+		//
+		// discovery:subscribe()
+		//
+		subscribe = function() {
+
+		}
 	}
 
-	// ---------------------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------------------
 	// RULES - internally
 }

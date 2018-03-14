@@ -195,6 +195,15 @@ ruleset manage_sensors {
 		}
 	}
 
+	// This rule will automatically accept any incoming subscription requests
+    rule auto_accept {
+	    select when wrangler inbound_pending_subscription_added
+	    fired {
+	      raise wrangler event "pending_subscription_approval"
+	        attributes event:attrs
+	    }
+	}
+
 	// Rule for removing a child pico subscription when a sensor is no longer needed
 	rule remove_sensor_pico_subscription {
 		select when sensor unneeded_sensor
@@ -231,17 +240,5 @@ ruleset manage_sensors {
 			raise wrangler event "child_deletion"
 				attributes {"name": sensor_name }	
 		}
-	}
-
-	// Rule for catching and handling errors within the sensor manager pico 
-	rule handle_error {
-		select when sensor error_detected
-		pre {
-			error_domain = event:attr("domain")
-			error_event = event:attr("event")
-			error_message = event:attr("message")
-		}
-		send_directive("error_detected", {"domain": error_domain, "event": error_event,
-										  "message": error_message})
 	}
 }

@@ -35,7 +35,8 @@ ruleset wovyn_base {
         violation = event:attr("temperature") > sp:threshold()
       }
       if violation then
-        send_directive("temperature_violation",{"temp":event:attr("temperature"), "threshold":ent:threshold.defaultsTo(thresholdDefault)})
+        send_directive("temperature_violation",{"temp":event:attr("temperature"), 
+                                                "threshold":ent:threshold.defaultsTo(thresholdDefault)})
       fired{
         raise wovyn event "threshold_violation"
           attributes {"temperature":event:attr("temperature"), "timestamp":event:attr("timestamp")}
@@ -45,18 +46,24 @@ ruleset wovyn_base {
     rule threshold_notification {
       select when wovyn threshold_violation
       pre{
-        to_number = sp:contactNumber()
-        from_number = sp:contactSource
-        message = <<Temperature Violation Detected at #{event:attr("timestamp")}! 
-Threshold: #{sp:threshold()}, 
-Current: #{event:attr("temperature")}>>
-        valid = not to_number.isnull() && not from_number.isnull()
+        name = sp:sensorName()
+        timestamp = event:attr("timestamp")
+        threshold = sp:threshold()
+        temperature = event:attr("temperature")
+        subscription_eci = subscription:established("Rx_role", "manager")[0]{"Tx"}
+        valid = not timestamp.isnull() && not temperature.isnull()
       }
       if valid then
-        send_directive("threshold notiication sent", {"body":"The threshold notification has been sent"})
-      fired {
-        raise twilio event "new_message"
-          attributes {"to":to_number, "from":from_number, "message":message} 
+        event:send({
+          "eci": subscription_eci, "eid": "threshold-notification",
+          "domain": "sensor", "type": "threshold_notification"
+        })
+      notfired {
+        raise sensor event "error_detected" attributes
+          {"domain": "wovyn",
+           "event": "threshold_violation",
+           "message": "Unable to send a threshold notification due to null timestamp and/or " +
+                      "temperature"}
       }
     }
 
