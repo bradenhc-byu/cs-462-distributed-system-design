@@ -54,16 +54,16 @@ def run_pico_based_systems_test(manager_eci, reset=True):
 
 
 	# Delete a sensor pico
-	print("Deleting sensor pico randomly...")
-	remove_url = picos.event_url(manager_eci, "remove-sensor", "sensor", "unneeded_sensor")
-	ok, r = picos.post(remove_url, data={"sensor_id": random.randint(1,5)})
-	if not ok:
-		print(r)
-		return False
+	#print("Deleting sensor pico randomly...")
+	#remove_url = picos.event_url(manager_eci, "remove-sensor", "sensor", "unneeded_sensor")
+	#ok, r = picos.post(remove_url, data={"sensor_id": random.randint(1,5)})
+	#if not ok:
+	#	print(r)
+	#	return False
 
 	# Wait for a bit
-	print("Check results!")
-	time.sleep(10)
+	#print("Check results!")
+	#time.sleep(10)
 
 	# Get the temperature values for all sensors with the sensor manager
 	temperature_url = picos.api_url(manager_eci, "manage_sensors", "temperatures")

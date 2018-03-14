@@ -216,7 +216,7 @@ ruleset manage_sensors {
 			send_directive("removing_child_subscription", {"name": createNameFromID(sensor{"id"})})
 		fired {
 			raise wrangler event "subscription_cancellation"
-				attributes {"Tx": sensor{"Tx"}}
+				attributes {"Tx": sensor{"Tx"}.klog("Tx of subscription to cancel")}
 		}
 	}
 

@@ -56,7 +56,13 @@ ruleset wovyn_base {
       if valid then
         event:send({
           "eci": subscription_eci, "eid": "threshold-notification",
-          "domain": "sensor", "type": "threshold_notification"
+          "domain": "sensor", "type": "threshold_notification",
+          "attrs": {
+            "sensor_name": name,
+            "timestamp": timestamp,
+            "temperature": temperature,
+            "threshold": threshold
+          }
         })
       notfired {
         raise sensor event "error_detected" attributes
