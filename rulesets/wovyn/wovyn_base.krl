@@ -50,7 +50,7 @@ ruleset wovyn_base {
         timestamp = event:attr("timestamp")
         threshold = sp:threshold()
         temperature = event:attr("temperature")
-        subscription_eci = subscription:established("Rx_role", "manager")[0]{"Tx"}
+        subscription_eci = subscription:established("Tx_role", "manager")[0]{"Tx"}
         valid = not timestamp.isnull() && not temperature.isnull()
       }
       if valid then

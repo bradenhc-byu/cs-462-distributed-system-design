@@ -74,7 +74,7 @@ def run_pico_based_systems_test(manager_eci, reset=True):
 
 def main():
 	# Testing
-	run_pico_based_systems_test("3azLx2fE92qc7AcaJLQEof")
+	run_pico_based_systems_test("DaBGjH2dJaZtVCNfPn8hrs")
 	return 0
 
 
