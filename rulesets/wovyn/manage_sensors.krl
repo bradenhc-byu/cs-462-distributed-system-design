@@ -26,7 +26,7 @@ ruleset manage_sensors {
 								   						"attrs":["sensor_id"]},
 								   {"domain": "sensor", "type":"introduce_sensor", 
 								   						"attrs":["sensor_id", "eci"]},
-								   {"domain": "sensor", "type": "temperature_report_request",
+								   {"domain": "sensor", "type": "request_temperature_reports",
 								   						"attrs":[]}]
 					}
 		// Establish some default entity variable definitions
@@ -36,7 +36,7 @@ ruleset manage_sensors {
 		defaultContactNumber = "+17208991356"
 		// Automatically generates a human readable name from a provided id
 		create_name_from_id = function(id){
-			"Sensor Pico" + id
+			"Sensor Pico " + id
 		}
 		// Returns the list of sensors registered with the sensor manager. The sensors are stored 
 		// as a map in the following format:
@@ -331,7 +331,7 @@ ruleset manage_sensors {
 		if valid then noop()
 		fired {
 			ent:reports{[report_id, "received"]} := ent:reports{[report_id, "received"]} + 1;
-			ent:reports{[report_id, "temperatures", name]} := event:attr("temperatures");
+			ent:reports{[report_id, "temperatures", sensor_name]} := event:attr("temperatures");
 			raise sensor event "check_temperature_report_status"
 				attributes {
 					"cid": report_id
