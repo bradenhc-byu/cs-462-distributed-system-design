@@ -288,7 +288,7 @@ ruleset manage_sensors {
 	rule scatter_report_request {
 		select when sensor scatter_temperature_report_requests where not event:attr("cid").isnull()
 		//foreach subscription:established("Tx_role", "sensor") setting(sensor)
-		foreach ent:sensors setting(sensor_pico_id, sensor)
+		foreach ent:sensors setting(sensor, sensor_pico_id)
 			always {
 				raise sensor event "send_temperature_report_request"
 					attributes {
