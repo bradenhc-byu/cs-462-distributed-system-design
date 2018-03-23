@@ -7,10 +7,19 @@ ruleset wovyn_base {
         use module sensor_profile alias sp
         use module temperature_store alias ts
         use module io.picolabs.subscription alias subscription
+        shares __testing
     }
     
     global {
+      __testing = {
+        "queries": [
 
+        ],
+        "events": [
+          {"domain": "wovyn", "type": "heartbeat", "attrs": ["genericThing"]} ,
+          {"domain": "wovyn", "type": "create_temperature_report", "attrs": ["cid", "Tx"]}
+        ]
+      }
     }
     
     rule process_heartbeat {

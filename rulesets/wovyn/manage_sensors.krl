@@ -18,13 +18,16 @@ ruleset manage_sensors {
 		// Establish some test cases 
 		__testing = { "queries": [ {"name": "temperatures"},
 								   {"name": "children"},
-								   {"name": "sensors"} ],
+								   {"name": "sensors"},
+								   {"name": "view_latest_report"} ],
 					  "events" : [ {"domain": "sensor", "type":"new_sensor", 
 					  									"attrs": ["sensor_id"]},
 								   {"domain": "sensor", "type":"unneeded_sensor", 
 								   						"attrs":["sensor_id"]},
 								   {"domain": "sensor", "type":"introduce_sensor", 
-								   						"attrs":["sensor_id", "eci"]}]
+								   						"attrs":["sensor_id", "eci"]},
+								   {"domain": "sensor", "type": "temperature_report_request",
+								   						"attrs":[]}]
 					}
 		// Establish some default entity variable definitions
 		defaultSensors = {}
@@ -33,7 +36,7 @@ ruleset manage_sensors {
 		defaultContactNumber = "+17208991356"
 		// Automatically generates a human readable name from a provided id
 		createNameFromID = function(id){
-			"Sensor " + id + " Pico"
+			"Sensor Pico" + id
 		}
 		// Returns the list of sensors registered with the sensor manager. The sensors are stored 
 		// as a map in the following format:
