@@ -102,7 +102,7 @@ ruleset wovyn_base {
                "attrs": {
                   "cid": event:attr("cid"),
                   "name": sp:sensorName(),
-                  "Tx": subsciption:established("Tx", event:attr("Tx")){"Rx"},
+                  "Tx": subscription:established("Tx", event:attr("Tx"))[0]{"Rx"},
                   "temperatures": storage:temperatures()
                 }})
   }

@@ -308,7 +308,7 @@ ruleset manage_sensors {
 					   "domain": "sensor",
 					   "type": "temperature_report_request",
 					   "attrs": {
-					   		"Tx": subscription:established("Tx", event:attr("Tx")){"Rx"},
+					   		"Tx": subscription:established("Tx", event:attr("Tx"))[0]{"Rx"},
 					   		"cid": event:attr("cid")
 					   	}})
 		fired {
