@@ -1,3 +1,9 @@
+/**
+ * Sensor Management
+ * 
+ * This ruleset contains shared functions and rules that control and manage a collection of
+ * Wovyn temperature sensors.
+ */
 ruleset manage_sensors {
 	meta {
 		author "Braden Hitchcock"
@@ -5,7 +11,7 @@ ruleset manage_sensors {
 		logging on
 		use module io.picolabs.wrangler alias wrangler
 		use module io.picolabs.subscription alias subscription
-		shares __testing, temperatures, children, sensors
+		shares __testing, temperatures, children, sensors, view_latest_report
 	}
 
 	global {
@@ -60,6 +66,21 @@ ruleset manage_sensors {
 		// Returns the child sensor information based on the Tx 
 		getSensorByTx = function(Tx){
 			ent:sensors{engine:getPicoIDByECI(Tx)}
+		}
+		// Generate a correlation identifier
+		generateReportCorrelationId = function(){
+			<<#{time:now()}::#{random:word()}>>
+		}
+		// Send the 5 latest reports 
+		view_latest_report = function(){
+			buildLatestReport(ent:reports.keys(), {})
+		}
+		// Build the latest reports recursively
+		build_latest_report = function(report_keys, latest){
+			(latest.length() == 5 || report_keys.length() == 0) => latest |
+				buildLatestReport(report_keys.tail(), latest.put(report_keys.head(), 
+													  ent:reports{report_keys.head()}))
+
 		}
 	}
 
@@ -239,5 +260,100 @@ ruleset manage_sensors {
 			raise wrangler event "child_deletion"
 				attributes {"name": sensor_name }	
 		}
+	}
+
+	// Rule for generating a correlation identifier to be used in creating a temperature report.
+	rule create_report_cid {
+		select when sensor request_temperature_reports
+		pre {
+			report_id = generateReportCorrelationId().klog("new report cid")
+		}
+		if ent:reports >< report_id then noop()
+		fired {
+			raise sensor event "request_temperature_reports"
+		} else {
+			ent:reports := ent:reports.defaultsTo({});
+			ent:reports{report_id} := { "sensors": ent:sensors.length(),
+										"sent": 0,
+										"received": 0,
+										"temperatures": {}
+									  };
+			raise sensor event "scatter_temperature_report_requests"
+				attributes {"cid": report_id }
+		}
+	}
+
+	// Scatters a report request to all of the temperature sensor picos that are being managed by
+	// this manager pico 
+	rule scatter_report_request {
+		select when sensor scatter_temperature_report_requests where not event:attr("cid").isnull()
+		//foreach subscription:established("Tx_role", "sensor") setting(sensor)
+		foreach ent:sensors setting(sensor_pico_id, sensor)
+			always {
+				raise sensor event "send_temperature_report_request"
+					attributes {
+						"cid": event:attr("cid"),
+						"Tx": sensor{"Tx"}
+					}
+			}
+	}
+
+	// Sends a report request to a temperature sensor pico. We have abstracted this funcitonality
+	// away so that we can ask for reports from individual temperature sensors without generating
+	// a report for all of them
+	rule send_single_temperature_report_request {
+		select when sensor send_temperature_report_request
+		event:send({"eci": event:attr("Tx"),
+					   "eid": "get-temperatures",
+					   "domain": "sensor",
+					   "type": "temperature_report_request",
+					   "attrs": {
+					   		"Tx": subscription:established("Tx", event:attr("Tx")){"Rx"},
+					   		"cid": event:attr("cid")
+					   	}})
+		fired {
+			ent:reports{[event:attr("cid"), "sent"]} := ent:reports{[event:attr("cid"), "sent"]} + 1
+		}
+	}
+
+	// Gathers the temperature reports sent back to the manager by the sensor picos 
+	rule gather_temperature_reports {
+		select when sensor temperature_report_created
+		pre {
+			report_id = event:attr("cid")
+			sensor_Tx = event:attr("Tx")
+			sensor_name = event:attr("name")
+			valid = not report_id.isnull() && not sensor_Tx.isnull()
+		}
+		if valid then noop()
+		fired {
+			ent:reports{[report_id, "received"]} := ent:reports{[report_id, "received"]} + 1;
+			ent:reports{[report_id, "temperatures", name]} := event:attr("temperatures");
+			raise sensor event "check_temperature_report_status"
+				attributes {
+					"cid": report_id
+				}
+		}
+	}
+
+	rule check_temperature_report_status {
+		select when sensor check_temperature_report_status
+		pre {
+			report = ent:reports{event:attr("cid")}
+			report_complete = report{"sensors"} == report{"received"}
+		}
+		if report_complete then noop()
+		fired {
+			raise sensor event "temperature_report_data_ready"
+				attributes event:attrs
+		}
+	}
+
+	rule send_temperature_report {
+		select when sensor temperature_report_data_ready
+		send_directive("temperature_report", {"report_id": event:attr("cid"),
+											  "report": ent:reports{event:attr("cid")}
+											 }
+					  )
 	}
 }
