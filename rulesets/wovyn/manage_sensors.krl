@@ -35,7 +35,7 @@ ruleset manage_sensors {
 		defaultLocation = {"longitude": 0.0, "latitude": 0.0}
 		defaultContactNumber = "+17208991356"
 		// Automatically generates a human readable name from a provided id
-		createNameFromID = function(id){
+		create_name_from_id = function(id){
 			"Sensor Pico" + id
 		}
 		// Returns the list of sensors registered with the sensor manager. The sensors are stored 
@@ -54,7 +54,7 @@ ruleset manage_sensors {
 		temperatures = function(){
 			build_temperatures = function(child_list){
 				( child_list.length() != 0 ) =>
-						build_temperatures(child_list.tail()).put([createNameFromID(getSensorByTx(child_list.head(){"Tx"}){"id"})],
+						build_temperatures(child_list.tail()).put([create_name_from_id(get_sensor_by_Tx(child_list.head(){"Tx"}){"id"})],
 							http:get(meta:host + "/sky/cloud/" + child_list.head(){"Tx"} +
 								     "/temperature_store/temperatures"){"content"}.decode())
 					|
@@ -67,21 +67,21 @@ ruleset manage_sensors {
 			wrangler:children()
 		}
 		// Returns the child sensor information based on the Tx 
-		getSensorByTx = function(Tx){
+		get_sensor_by_Tx = function(Tx){
 			ent:sensors{engine:getPicoIDByECI(Tx)}
 		}
 		// Generate a correlation identifier
-		generateReportCorrelationId = function(){
+		generate_report_correlation_id = function(){
 			<<#{time:now()}::#{random:word()}>>
 		}
 		// Send the 5 latest reports 
 		view_latest_report = function(){
-			buildLatestReport(ent:reports.keys(), {})
+			build_latest_report(ent:reports.defaultsTo({}).keys(), {})
 		}
 		// Build the latest reports recursively
 		build_latest_report = function(report_keys, latest){
 			(latest.length() == 5 || report_keys.length() == 0) => latest |
-				buildLatestReport(report_keys.tail(), latest.put(report_keys.head(), 
+				build_latest_report(report_keys.tail(), latest.put(report_keys.head(), 
 													  ent:reports{report_keys.head()}))
 
 		}
@@ -93,7 +93,7 @@ ruleset manage_sensors {
 		select when sensor new_sensor
 		pre {
 			sensor_id = event:attr("sensor_id").klog("sensor id")
-			sensor_name = createNameFromID(sensor_id)
+			sensor_name = create_name_from_id(sensor_id)
 			exists = ent:sensors.defaultsTo(defaultSensors)
 									.filter(function(x){x{"name"} == sensor_name})
 									.keys().length() != 0
@@ -111,7 +111,7 @@ ruleset manage_sensors {
 		select when sensor new_sensor
 		pre {
 			sensor_id = event:attr("sensor_id").klog("sensor id")
-			sensor_name = createNameFromID(sensor_id)
+			sensor_name = create_name_from_id(sensor_id)
 			valid = not sensor_id.isnull()
 			exists = ent:sensors.defaultsTo(defaultSensors)
 									.filter(function(x){x{"name"} == sensor_name})
@@ -137,7 +137,7 @@ ruleset manage_sensors {
 			sensor_pico_id = event:attr("id")
 			sensor_pico_eci = event:attr("eci")
 			sensor_id = event:attr("rs_attrs"){"sensor_id"}.klog("initialization complete for sensor")
-			sensor_name = createNameFromID(sensor_id).klog("sensor name")
+			sensor_name = create_name_from_id(sensor_id).klog("sensor name")
 			valid = not sensor_id.isnull()
 		}
 		if valid then
@@ -175,7 +175,7 @@ ruleset manage_sensors {
 			public_key = event:attr("_Tx_public_key").klog("public key")
 			subscription = subscription:established("Tx_public_key", public_key)[0]
 			sensor_pico_id = engine:getPicoIDByECI(subscription{"Tx"})
-			sensor_name = createNameFromID(ent:sensors{sensor_pico_id}{"id"})
+			sensor_name = create_name_from_id(ent:sensors{sensor_pico_id}{"id"})
 			valid = not subscription{"Tx"}.isnull()
 		}
 		if valid.klog("valid request") then
@@ -237,7 +237,7 @@ ruleset manage_sensors {
 			exists = not sensor.isnull()
 		}
 		if exists then
-			send_directive("removing_child_subscription", {"name": createNameFromID(sensor{"id"})})
+			send_directive("removing_child_subscription", {"name": create_name_from_id(sensor{"id"})})
 		fired {
 			raise wrangler event "subscription_cancellation"
 				attributes {"Tx": sensor{"Tx"}.klog("Tx of subscription to cancel")}
@@ -253,11 +253,11 @@ ruleset manage_sensors {
 			sensor = ent:sensors.defaultsTo(defaultSensors)
 						.filter(function(x){x{"Tx"} == removed_Tx})
 						.values()[0].klog("return from subscription removed")
-			sensor_name = createNameFromID(sensor{"id"}).klog("sensor name")
+			sensor_name = create_name_from_id(sensor{"id"}).klog("sensor name")
 			exists = not sensor.isnull()
 		}
 		if exists.klog("sensor to delete exists") then
-			send_directive("deleting_sensor", {"name": createNameFromID(sensor{"id"})})
+			send_directive("deleting_sensor", {"name": create_name_from_id(sensor{"id"})})
 		fired {
 			clear ent:sensors{engine:getPicoIDByECI(sensor{"eci"})};
 			raise wrangler event "child_deletion"
@@ -269,7 +269,7 @@ ruleset manage_sensors {
 	rule create_report_cid {
 		select when sensor request_temperature_reports
 		pre {
-			report_id = generateReportCorrelationId().klog("new report cid")
+			report_id = generate_report_correlation_id().klog("new report cid")
 		}
 		if ent:reports >< report_id then noop()
 		fired {

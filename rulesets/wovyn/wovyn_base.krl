@@ -17,7 +17,7 @@ ruleset wovyn_base {
         ],
         "events": [
           {"domain": "wovyn", "type": "heartbeat", "attrs": ["genericThing"]} ,
-          {"domain": "wovyn", "type": "create_temperature_report", "attrs": ["cid", "Tx"]}
+          {"domain": "wovyn", "type": "temperature_report_request", "attrs": ["cid", "Tx"]}
         ]
       }
     }
