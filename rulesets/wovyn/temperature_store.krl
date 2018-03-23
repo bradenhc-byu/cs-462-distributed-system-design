@@ -3,7 +3,7 @@ ruleset temperature_store {
         author "Braden Hitchcock"
         logging on
         description <<Persistent storage for temperature sensor results>>
-        provides temperature, threshold_violations, inrange_temperatures
+        provides temperatures, threshold_violations, inrange_temperatures
         shares temperatures, threshold_violations, inrange_temperatures
     }
 
