@@ -5,7 +5,7 @@ ruleset wovyn_base {
         logging on
         description <<Base ruleset for temperature sensor>>
         use module sensor_profile alias sp
-        use module temperature_store alias storage
+        use module temperature_store alias ts
         use module io.picolabs.subscription alias subscription
     }
     
@@ -95,15 +95,20 @@ ruleset wovyn_base {
 
   rule create_temperature_report {
     select when sensor temperature_report_request
-    event:send({"eci": event:attr("Tx"),
+    pre {
+      report_id = event:attr("cid").klog("report id to create report for")
+      eci = event:attr("Tx").klog("Tx for manager")
+      temperatures = ts:temperatures().klog("temperatures")
+    }
+    event:send({"eci": eci,
                "eid": "report-created",
                "domain": "sensor",
                "type": "temperature_report_created",
                "attrs": {
-                  "cid": event:attr("cid"),
+                  "cid": report_id,
                   "name": sp:sensorName(),
-                  "Tx": subscription:established("Tx", event:attr("Tx"))[0]{"Rx"},
-                  "temperatures": storage:temperatures()
+                  "Tx": subscription:established("Tx", eci)[0]{"Rx"},
+                  "temperatures": temperatures
                 }})
   }
 }
