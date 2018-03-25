@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.5m
 import picosapi as picos
 import time
 import random

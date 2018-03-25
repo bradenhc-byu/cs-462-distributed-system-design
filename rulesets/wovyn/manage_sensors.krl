@@ -76,15 +76,33 @@ ruleset manage_sensors {
 		}
 		// Send the 5 latest reports 
 		view_latest_report = function(){
-			build_latest_report(ent:reports.defaultsTo({}).keys(), {})
+			// Find the latest keys for the reports 
+			find_latest = function(report_keys){
+				(report_keys.length() <= 5) => report_keys |
+				find_latest(report_keys.tail())
+			};
+			// Build the latest reports recursively
+			build_latest_report = function(report_keys){
+				(report_keys.length() == 0) => [] |
+				build_latest_report(report_keys.tail())
+					.append([ent:reports{report_keys.head()}])
+			};
+			latest_keys = find_latest(ent:reports.keys());
+			build_latest_report(latest_keys)
 		}
-		// Build the latest reports recursively
-		build_latest_report = function(report_keys, latest){
-			(latest.length() == 5 || report_keys.length() == 0) => latest |
-				build_latest_report(report_keys.tail(), latest.put(report_keys.head(), 
-													  ent:reports{report_keys.head()}))
-
-		}
+		// Show the reports structure. Structured like the following:
+		// {
+		//     <correlation_id>: {
+		//         id: "<correlation_id>",
+		//		   sensors: 4,
+		//		   sent: 4,
+		//		   received: 4,
+		//         temperatures: {
+		//             <sensor_name>: [<temperatures>]
+		//         }
+		//     },
+		//	   ...
+		// }
 	}
 
 	// Rule for handling when a user tries to add a new sensor that has the same
@@ -276,7 +294,8 @@ ruleset manage_sensors {
 			raise sensor event "request_temperature_reports"
 		} else {
 			ent:reports := ent:reports.defaultsTo({});
-			ent:reports{report_id} := { "sensors": ent:sensors.length(),
+			ent:reports{report_id} := { "id": report_id,
+										"sensors": ent:sensors.length(),
 										"sent": 0,
 										"received": 0,
 										"temperatures": {}
