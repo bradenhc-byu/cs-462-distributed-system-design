@@ -75,7 +75,7 @@ ruleset gossip {
         create_my_message = function(){
             latest_temperature = ts:temperatures()[0].klog("latest temperature");
             ( not latest_temperature.isnull() ) =>
-                { "message_id": meta:picoId + ":" + ent:sequence_number,
+                { "message_id": meta:picoId + ":" + ent:send_sequence_number,
                   "sensor_id": meta:picoId,
                   "temperature": ts:temperatures()[0]{"temperature"},
                   "timestamp": ts:temperatures()[0]{"timestamp"}
@@ -123,18 +123,18 @@ ruleset gossip {
         get_peer = function(){
             add_score = function(remaining, scores){
                 peer_id = engine:getPicoIDByECI(remaining.head(){"Tx"}).klog("peer id");
-                score = get_score(peer_id).klog("calculated score");
-                scores.append([{"peer_id": peer_id, "score": score}]).klog("current scores object");
+                score = get_score(peer_id);
+                scores.append([{"peer_id": peer_id, "score": score}]);
                 calculate_scores(remaining.tail(), scores)
             };
             calculate_scores = function(remaining, scores){
                 (remaining.length() == 0) =>
-                    scores
+                    scores.klog("scores when length is zero")
                 |
-                    add_score(remaining, scores).klog("added score result")
+                    add_score(remaining, scores)
             };
             peers = subscription:established("Tx_role", "node");
-            scores = calculate_scores(peers, []);
+            scores = calculate_scores(peers, []).klog("final scores");
             set_best = function(scores, best){
                 best = scores.head().klog("best peer so far");
                 find_best(scores.tail(), best)
@@ -303,7 +303,7 @@ ruleset gossip {
     rule update_interval {
         select when gossip interval
         pre {
-            interval = event:attr("interval")
+            interval = event:attr("interval").as("Number")
         }
         if not interval.isnull() then
             send_directive("update_interval", { "value": interval })
