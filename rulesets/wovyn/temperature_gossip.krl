@@ -223,7 +223,7 @@ ruleset gossip {
         pre {
             // Determine the type of message to gossip (seen or rumor)
             peer = get_peer().klog("peer selected")
-            gossip_type = ((random:integer(20) <= 10) => "rumor" | "seen").klog("gossip type")
+            gossip_type = ((random:integer(20) <= 12) => "rumor" | "seen").klog("gossip type")
             message = prepare_message(gossip_type).klog("message")
             valid = not peer.isnull()
         }
@@ -271,7 +271,7 @@ ruleset gossip {
             parts = message{"message_id"}.split(re#:#)
             peer_id = parts[0].klog("peer id")
             sequence_number = parts[1].as("Number").klog("message sequence number")
-            should_add = ent:messages{peer_id}.index() == -1
+            should_add = ent:messages{peer_id}.filter(function(x){x{"timstamp"} == message{"timestamp"}}).length() == 0
         }
         if should_add.klog("message not already stored") then noop()
         fired {
@@ -298,7 +298,7 @@ ruleset gossip {
         if ent:messages.isnull() || ent:state.isnull() || ent:send_sequence_number.isnull() 
             || ent:interval.isnull() then noop()
         fired {
-            ent:interval := 30;
+            ent:interval := 5;
             ent:send_sequence_number := 0;
             ent:my_last_temperature_message := {};
             ent:messages := {};
