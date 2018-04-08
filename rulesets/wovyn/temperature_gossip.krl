@@ -271,7 +271,7 @@ ruleset gossip {
             parts = message{"message_id"}.split(re#:#)
             peer_id = parts[0].klog("peer id")
             sequence_number = parts[1].as("Number").klog("message sequence number")
-            should_add = ent:messages{peer_id}.include() == -1
+            should_add = ent:messages{peer_id}.index() == -1
         }
         if should_add.klog("message not already stored") then noop()
         fired {
