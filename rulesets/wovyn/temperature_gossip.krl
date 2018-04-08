@@ -51,7 +51,9 @@ ruleset gossip {
                                  {"domain": "gossip", "type": "heartbeat",
                                         "attrs":[]},
                                  {"domain": "gossip", "type": "rumor",
-                                        "attrs":["message"]}]}
+                                        "attrs":["message"]},
+                                 {"domain": "gossip", "type": "interval",
+                                        "attrs":["interval"]}]}
         /**
          * Entry function for preparing a message. It takes as an argument the type of message to
          * generate. This may either be 'rumor' or 'seen'
@@ -242,10 +244,10 @@ ruleset gossip {
     rule gossip_rumor_message {
         select when gossip rumor
         pre {
-            message = event:attr("message")
+            message = event:attr("message").klog("message received from peer")
             parts = message{"message_id"}.split(re#:#)
-            peer_id = parts[0]
-            sequence_number = parts[1].as("Number")
+            peer_id = parts[0].klog("peer id")
+            sequence_number = parts[1].as("Number").klog("message sequence number")
         }
     }
 
@@ -265,9 +267,12 @@ ruleset gossip {
      */
     rule start_gossip {
         select when wrangler ruleset_added where rids >< meta:rid
-        always {
+        if ent:topics.isnull() || ent:interval.isnull() then noop()
+        fired {
             ent:interval := 30;
             ent:topics := {};
+        }
+        finally {
             schedule gossip event "heartbeat" at time:add(time:now(), {"seconds": ent:interval})
         }
     }
