@@ -163,7 +163,7 @@ ruleset gossip {
                     add_score(remaining, scores)
             };
             peers = subscription:established("Tx_role", "node");
-            scores = calculate_scores(peers, []).klog("final scores");
+            original_scores = calculate_scores(peers, []).klog("final scores");
             pick_random = function(scores){
                 random_position = random:integer(scores.length() - 1).klog("picked random score position");
                 scores[random_position]{"peer_id"}
@@ -178,14 +178,14 @@ ruleset gossip {
                     best{"peer_id"}
                 |
                 (scores.length() == 0 && not found) =>
-                    pick_random(scores).klog("picked random score id")
+                    pick_random(original_scores).klog("picked random score id")
                 |
                 (scores.head(){"score"} < best{"score"}) =>
                     set_best(scores, best, found)
                 |
                     find_best(scores.tail(), best, found)
             };
-            best_peer = find_best(scores.tail(), scores.head(), false);
+            best_peer = find_best(original_scores.tail(), original_scores.head(), false);
             subscription:established("Tx_role", "node").filter(function(x){
                 engine:getPicoIDByECI(x{"Tx"}) == best_peer
             })[0]{"Tx"};
