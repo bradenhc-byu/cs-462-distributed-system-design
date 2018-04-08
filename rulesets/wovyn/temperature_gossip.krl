@@ -250,7 +250,7 @@ ruleset gossip {
         if valid.klog("can add message") then noop()
         fired {
             // Add it to our storage
-            ent:messages{meta:picoId} := ent:messages{meta:picoId}.append([event:attr("message")]);
+            ent:messages{meta:picoId} := ent:messages{meta:picoId}.defaultsTo([]).append([event:attr("message")]);
             // Increment my send_sequence_number
             ent:send_sequence_number := ent:send_sequence_number + 1;
             // Update our last message 
@@ -296,7 +296,8 @@ ruleset gossip {
             ent:interval := 30;
             ent:send_sequence_number := 0;
             ent:my_last_temperature_message := {};
-            ent:topics := {}
+            ent:messages := {};
+            ent:state := {}
         }
         finally {
             schedule gossip event "heartbeat" at time:add(time:now(), {"seconds": ent:interval})
