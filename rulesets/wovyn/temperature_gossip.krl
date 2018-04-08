@@ -154,7 +154,7 @@ ruleset gossip {
             best_peer = find_best(scores.tail(), scores.head());
             subscription:established("Tx_role", "node").filter(function(x){
                 engine:getPicoIDByECI(x{"Tx"}) == best_peer
-            })[0];
+            })[0]{"Tx"};
         }
 
         /**
@@ -271,8 +271,10 @@ ruleset gossip {
             parts = message{"message_id"}.split(re#:#)
             peer_id = parts[0].klog("peer id")
             sequence_number = parts[1].as("Number").klog("message sequence number")
+            should_add = ent:messages{peer_id}.include() == -1
         }
-        always {
+        if should_add.klog("message not already stored") then noop()
+        fired {
             ent:messages{peer_id} := ent:messages{peer_id}.defaultsTo([]).append([message]);
         }
     }
