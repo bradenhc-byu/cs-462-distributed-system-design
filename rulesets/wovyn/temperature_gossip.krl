@@ -92,8 +92,8 @@ ruleset gossip {
         generate_rumor_message = function(){
             // The other half of the time we want to propogate a random message from others. This
             // message will be the latest gossip we have heard about a particular node
-            random_key_position = random:integer(ent:messages.length() - 1).klog("random key position");
-            random_key_position = (random_key_position == -1) => 0 | random_key_position;
+            random_key_position = random:integer(ent:messages.keys().length() - 1);
+            random_key_position = ((random_key_position < 0) => 0 | random_key_position).klog("random key position");
             random_key = ent:messages.keys()[random_key_position].klog("random key");
             peer_messages = ent:messages{random_key}.klog("messages to choose from");
             peer_messages[peer_messages.length() - 1]
@@ -269,6 +269,9 @@ ruleset gossip {
             parts = message{"message_id"}.split(re#:#)
             peer_id = parts[0].klog("peer id")
             sequence_number = parts[1].as("Number").klog("message sequence number")
+        }
+        always {
+            ent:messages{peer_id} := ent:messages{peer_id}.defaultsTo([]).append([message]);
         }
     }
 
