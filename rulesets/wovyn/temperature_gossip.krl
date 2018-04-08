@@ -46,7 +46,10 @@ ruleset gossip {
     global {
         // Define some test cases
         __testing = { "queries": [],
-                      "events": []}
+                      "events": [{"domain": "gossip", "type": "introduce_sensor", 
+                                        "attrs":["sensor_id", "eci"]},
+                                 {"domain": "gossip", "type": "rumor",
+                                        "attrs":["message"]}]}
         // prepare_message(type)
         prepare_message = function(type){
             (type == "rumor") => 
@@ -187,7 +190,6 @@ ruleset gossip {
     rule gossip_rumor_message {
         select when gossip rumor
         pre {
-            gossip_topic = event:attr("topic")
             message = event:attr("message")
             parts = message{"message_id"}.split(re#:#)
             peer_id = parts[0]
@@ -230,6 +232,50 @@ ruleset gossip {
             send_directive("update_interval", { "value": interval })
         fired {
             ent:interval := interval
+        }
+    }
+
+    /**
+     * Rule used for introducing an already existing sensor pico to this gossip node
+     */
+    rule introduce_existing_sensor {
+        select when gossip introduce_sensor 
+        pre {
+            sensor_id = event:attr("sensor_id").klog("sensor id")
+            sensor_eci = event:attr("eci").klog("sensor eci")
+            sensor_pico_id = engine:getPicoIDByECI(sensor_eci)
+            valid = not sensor_id.isnull() && not sensor_eci.isnull()
+        }
+        if valid.klog("valid sensor introduction") then
+            noop()
+        fired {
+            // First store the sensor 
+            ent:state := ent:state.defaultsTo({});
+            ent:state{sensor_pico_id} := {"seen": {}, "received": []};
+            // Raise an event to subscribe to the sensor pico 
+            raise wrangler event "subscription" attributes
+                { "name" : "gossipSensor" + sensor_id,
+                  "Rx_role": "node",
+                  "Tx_role": "node",
+                  "channel_type": "subscription",
+                  "wellKnown_Tx" : sensor_eci
+                }
+        }
+        else {
+            raise sensor event "error_detected" attributes
+                {"domain": "sensor",
+                 "event": "introduce_sensor",
+                 "message": "Invalid event attributes. Must include sensor id and eci."
+                }
+        }
+    }
+
+    // This rule will automatically accept any incoming subscription requests
+    rule auto_accept {
+        select when wrangler inbound_pending_subscription_added
+        fired {
+          raise wrangler event "pending_subscription_approval"
+            attributes event:attrs
         }
     }
 
