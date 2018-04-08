@@ -121,7 +121,7 @@ ruleset gossip {
          */
         get_peer = function(){
             add_score = function(remaining, scores){
-                peer_id = engine:getPicoIDByECI(remaining.head(){"Tx"});
+                peer_id = engine:getPicoIDByECI(remaining.head(){"Tx"}).klog("peer id");
                 score = get_score(peer_id);
                 scores.append({"peer_id": peer_id, "score": score});
                 calculate_scores(remaining.tail(), scores)
