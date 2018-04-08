@@ -64,7 +64,7 @@ ruleset gossip {
                 generate_rumor_message()
             |
                 // Prepare a seen message response
-                generate_seen_message({}, ent:state.keys())
+                generate_seen_message(ent:state.keys(), {})
         }
 
         /**
