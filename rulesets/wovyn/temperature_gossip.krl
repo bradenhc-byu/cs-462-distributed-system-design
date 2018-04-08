@@ -163,15 +163,17 @@ ruleset gossip {
         select when gossip heartbeat
         pre {
             // Determine the type of message to gossip (seen or rumor)
-            peer = get_peer()
-            gossip_type = (random:integer(20) <= 10) => "rumor" | "seen"
-            message = prepare_message(gossip_type)
+            peer = get_peer().klog("peer selected")
+            gossip_type = ((random:integer(20) <= 10) => "rumor" | "seen").klog("gossip type")
+            message = prepare_message(gossip_type).klog("message")
+            valid = not peer.isnull()
         }
         // Send the message to the chosen subscriber on the gossip topic
-        event:send({"eci": peer, "domain": "gossip", "type": gossip_type, "attrs": {
-            "pico_id": meta:picoId,
-            "message": message
-        }})
+        if valid.klog("valid heartbeat") then
+            event:send({"eci": peer, "domain": "gossip", "type": gossip_type, "attrs": {
+                "pico_id": meta:picoId,
+                "message": message
+            }})
         // Schedule the next heartbeat event
         always {
             // Generate a new message from me
