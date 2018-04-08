@@ -262,14 +262,12 @@ ruleset gossip {
                 response_peer_id = parts[0];
                 response_sequence_number = parts[1].as("Number");
                 seen_message{response_peer_id} = response_sequence_number;
-                current_state = ent:state{pico_id};
-                current_state{"seen"} = seen_message;
-                current_state
+                seen_message
             };
             (response != null) =>
                 update()
             |
-                ent:state{pico_id}
+                ent:state{[pico_id, "seen"]}
         }
     }
 
