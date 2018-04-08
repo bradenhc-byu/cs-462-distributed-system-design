@@ -93,6 +93,7 @@ ruleset gossip {
             // The other half of the time we want to propogate a random message from others. This
             // message will be the latest gossip we have heard about a particular node
             random_key_position = random:integer(ent:messages.length() - 1).klog("random key position");
+            random_key_position = (random_key_position == -1) => 0 | random_key_position;
             random_key = ent:messages.keys()[random_key_position].klog("random key");
             peer_messages = ent:messages{random_key}.klog("messages to choose from");
             peer_messages[peer_messages.length() - 1]
