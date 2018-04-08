@@ -4,7 +4,7 @@ ruleset temperature_store {
         logging on
         description <<Persistent storage for temperature sensor results>>
         provides temperatures, threshold_violations, inrange_temperatures
-        shares temperatures, threshold_violations, inrange_temperatures
+        shares __testing, temperatures, threshold_violations, inrange_temperatures
     }
 
     global {
