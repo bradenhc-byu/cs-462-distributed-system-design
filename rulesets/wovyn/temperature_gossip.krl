@@ -151,7 +151,10 @@ ruleset gossip {
                 |
                     find_best(scores.tail(), best)
             };
-            find_best(scores.tail(), scores.head()) 
+            best_peer = find_best(scores.tail(), scores.head());
+            subscription:established("Tx_role", "node").filter(function(x){
+                engine:getPicoIDByECI(x{"Tx"}) == best_peer
+            })[0];
         }
 
         /**
@@ -227,7 +230,6 @@ ruleset gossip {
         // Send the message to the chosen subscriber on the gossip topic
         if valid.klog("valid heartbeat") then
             event:send({"eci": peer, "domain": "gossip", "type": gossip_type, "attrs": {
-                "pico_id": meta:picoId,
                 "message": message
             }})
         // Schedule the next heartbeat event
