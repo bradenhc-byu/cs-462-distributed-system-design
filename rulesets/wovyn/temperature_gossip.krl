@@ -48,9 +48,14 @@ ruleset gossip {
         __testing = { "queries": [],
                       "events": [{"domain": "gossip", "type": "introduce_sensor", 
                                         "attrs":["sensor_id", "eci"]},
+                                 {"domain": "gossip", "type": "heartbeat",
+                                        "attrs":[]},
                                  {"domain": "gossip", "type": "rumor",
                                         "attrs":["message"]}]}
-        // prepare_message(type)
+        /**
+         * Entry function for preparing a message. It takes as an argument the type of message to
+         * generate. This may either be 'rumor' or 'seen'
+         */
         prepare_message = function(type){
             (type == "rumor") => 
                 // Prepare a rumor message
@@ -60,21 +65,41 @@ ruleset gossip {
                 generate_seen_message({}, ent:state.keys())
         }
 
+        /**
+         * Uses the temperature_store ruleset to get the most recent temperature information for
+         * this sensor pico. If there is temperature data in the store, then it will create a rumor
+         * message and return it. Otherwise it will return null.
+         */
         create_my_message = function(){
-            { "message_id": meta:picoId + ":" + ent:sequence_number,
-              "sensor_id": meta:picoId,
-              "temperature": ts:temperatures[0]{"temperature"},
-              "timestamp": ts:temperatures[0]{"timestamp"}
-            }
+            ( not ts:temperatures[0].isnull() ) =>
+                { "message_id": meta:picoId + ":" + ent:sequence_number,
+                  "sensor_id": meta:picoId,
+                  "temperature": ts:temperatures[0]{"temperature"},
+                  "timestamp": ts:temperatures[0]{"timestamp"}
+                }
+            |
+                null
         }
 
-        generate_rumor_message = function(peer_id){
+        /**
+         * When we receive a heartbeat event, and the event type we are to produce is a 'rumor', 
+         * then we need to randomely select a message containing most recent temperature information
+         * to gossip to a peer. The peer will have been chosen beforehand.
+         */
+        generate_rumor_message = function(){
             // The other half of the time we want to propogate a random message from others. This
             // message will be the latest gossip we have heard about a particular node
             peer_messages = ent:messages{ent:messages.keys()[random:integer(ent:messages.length() - 1)]};
             peer_messages[peer_messages.length() - 1]
         }
 
+        /**
+         * When we receive a heartbeat event, and the event type we are to produce is a 'seen'
+         * message, we will gather state information for the messages we have seen from all of our
+         * peers and then send it to a pre-chosen peer. In return we would expect to receive all
+         * of the information we may be missing that another peer has, although this secondary step
+         * is not handled here in the function.
+         */
         generate_seen_message = function(peer_ids, seen){
             (peer_ids.length() == 0) => 
                 seen 
@@ -83,9 +108,15 @@ ruleset gossip {
                                       seen.put(peer_ids.head(), 
                                                ent:state{[peer_ids.head(), "received"]}[0]))
         }
-        // get_peer(topic)
-        // Determines the best peer to send the message to based on the message contents and what
-        // the ruleset knows about the state of the peers
+
+        /** 
+         * Determines the best peer to send the message to. This is done by 'scoring' each peer.
+         * We compare the states of other peers to our state. If they are missing messages that we
+         * have, their score will be lower, whereas if they have messages we don't (which should
+         * rarely be the case if the seen event is working properly), they score more points. At
+         * the end of the algorithm, the peer with the lowest score is selected as the peer we
+         * will send a message to.
+         */
         get_peer = function(){
             add_score = function(remaining, scores){
                 peer_id = engine:getPicoIDByECI(remaining.head(){"Tx"});
@@ -117,6 +148,11 @@ ruleset gossip {
             find_best(scores.tail(), scores.head()) 
         }
 
+        /**
+         * This is a helper function for finding the best peer to send a message to. It will
+         * compare the state of the peer whose pico id it receives to our state and score it
+         * according to the algorithm explained in the description of the get_peer() function.
+         */
         get_score = function(peer_id){
             score = 0;
             // Compare my send sequence number with what they have for me
@@ -138,10 +174,20 @@ ruleset gossip {
             compare_seen(ent:state{[peer_id, "seen"]}.keys(), score)
         }
 
+        /**
+         * This will give us the highest, complete seen message sequence number we have from
+         * a given peer. This helps us build the 'seen' message when we are gossiping about
+         * our state to our peers.
+         */
         get_received = function(peer_id){
             ent:state{[peer_id, "received"]}.defaultsTo([0])[0]
         }
 
+        /**
+         * This providers a sorter that will work on an array of rumor messages and order them
+         * buy their sequence number. We are assuming that the arrays are already split up
+         * by their peer ids, so we don't need to take those into accont when we are sorting.
+         */
         message_sorter = function(a, b){
             a_squence_number = a{"message_id"}.split(re#:#)[1].as("Number");
             b_sequence_number = b{"message_id"}.split(re#:#)[1].as("Number");
@@ -150,6 +196,10 @@ ruleset gossip {
                                                      1
         }
 
+        /**
+         * Stub for updating the state. Since this requires updating entity variables, we can't
+         * do this here. Will remove eventually.
+         */
         update_state = function(){
             null
         }
