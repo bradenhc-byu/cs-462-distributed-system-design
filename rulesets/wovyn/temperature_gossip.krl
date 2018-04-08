@@ -166,18 +166,22 @@ ruleset gossip {
             scores = calculate_scores(peers, []).klog("final scores");
             set_best = function(scores, best){
                 best = scores.head().klog("best peer so far");
-                find_best(scores.tail(), best)
+                found = true;
+                find_best(scores.tail(), best, found)
             };
-            find_best = function(scores, best){
-                (scores.length() == 0) =>
+            find_best = function(scores, best, found){
+                (scores.length() == 0 && found) =>
                     best{"peer_id"}
                 |
-                (scores.head(){"score"} < best{"score"}) =>
-                    set_best(scores, best)
+                (scores.length() == 0 && not found) =>
+                    scores[(scores.length() > 1) => random:integer(scores.length() - 1) | 0]
                 |
-                    find_best(scores.tail(), best)
+                (scores.head(){"score"} < best{"score"}) =>
+                    set_best(scores, best, found)
+                |
+                    find_best(scores.tail(), best, found)
             };
-            best_peer = find_best(scores.tail(), scores.head());
+            best_peer = find_best(scores.tail(), scores.head(), false);
             subscription:established("Tx_role", "node").filter(function(x){
                 engine:getPicoIDByECI(x{"Tx"}) == best_peer
             })[0]{"Tx"};
