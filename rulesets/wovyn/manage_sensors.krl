@@ -103,6 +103,9 @@ ruleset manage_sensors {
 		//     },
 		//	   ...
 		// }
+		reports = function(){
+			ent:reports.defaultsTo([])
+		}
 	}
 
 	// Rule for handling when a user tries to add a new sensor that has the same
@@ -309,8 +312,8 @@ ruleset manage_sensors {
 	// this manager pico 
 	rule scatter_report_request {
 		select when sensor scatter_temperature_report_requests where not event:attr("cid").isnull()
-		//foreach subscription:established("Tx_role", "sensor") setting(sensor)
-		foreach ent:sensors setting(sensor, sensor_pico_id)
+		foreach subscription:established("Tx_role", "sensor") setting(sensor)
+		//foreach ent:sensors setting(sensor, sensor_pico_id)
 			always {
 				raise sensor event "send_temperature_report_request"
 					attributes {
