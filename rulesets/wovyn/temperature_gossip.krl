@@ -228,12 +228,29 @@ ruleset gossip {
             }})
         // Schedule the next heartbeat event
         always {
-            // Generate a new message from me
-            ent:messages{meta:picoId} := ent:messages{meta:picoId}.append([create_my_message()]);
+            // Schedule the next heartbeat event
+            schedule gossip event "heartbeat" at time:add(time:now(), {"seconds": ent:interval});
+            // Attempt to add a new temperature to my storage
+            raise gossip event "my_message_created" attributes 
+                {"message": create_my_message()}
+        }
+    }
+
+    rule add_my_message {
+        select when gossip my_message_created where not event:attr("message").isnull()
+        pre {
+            // Make sure it isn't the same as our last message
+            same_as_last = ent:my_last_temperature_message{"timestamp"} == event:attr("message"){"timestamp"}
+            valid = not same_as_last
+        }
+        if valid.klog("can add message") then noop()
+        fired {
+            // Add it to our storage
+            ent:messages{meta:picoId} := ent:messages{meta:picoId}.append([event:attr("message")]);
             // Increment my send_sequence_number
             ent:send_sequence_number := ent:send_sequence_number + 1;
-            // Schedule the next heartbeat event
-            schedule gossip event "heartbeat" at time:add(time:now(), {"seconds": ent:interval})
+            // Update our last message 
+            ent:my_last_temperature_message := event:attr("message")
         }
     }
 
@@ -270,7 +287,9 @@ ruleset gossip {
         if ent:topics.isnull() || ent:interval.isnull() then noop()
         fired {
             ent:interval := 30;
-            ent:topics := {};
+            ent:send_sequence_number := 0;
+            ent:my_last_temperature_message := {};
+            ent:topics := {}
         }
         finally {
             schedule gossip event "heartbeat" at time:add(time:now(), {"seconds": ent:interval})

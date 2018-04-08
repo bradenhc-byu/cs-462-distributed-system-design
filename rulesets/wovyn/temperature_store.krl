@@ -8,6 +8,12 @@ ruleset temperature_store {
     }
 
     global {
+        // Define some test cases
+        __testing = { "queries": [],
+                      "events": [{"domain": "wovyn", "type": "test_collect_temperatures", 
+                                        "attrs":["temperature"]} 
+                                ]
+                    }
         temperatures = function(){
             ent:temperatures.defaultsTo([])
         }
@@ -28,6 +34,18 @@ ruleset temperature_store {
         send_directive("collect_temperatures", {"temperature":temperature, "timestamp":timestamp})
         always {
             ent:temperatures := [{"timestamp":timestamp, "temperature":temperature}].append(ent:temperatures.defaultsTo([]))
+        }
+    }
+
+    rule test_collect_temperatures {
+        select when wovyn test_collect_temperatures
+        pre {
+            temperature = event:attr("temperature").klog("testing by adding temperature")
+            timestamp = time:now()
+        }
+        if not temperature.isnull() then noop()
+        fired {
+            ent:temperatures := [{"timestamp":timestamp, "temperature":temperature}].append(ent:temperatures.defaultsTo([])) 
         }
     }
 
