@@ -291,7 +291,8 @@ ruleset gossip {
      */
     rule start_gossip {
         select when wrangler ruleset_added where rids >< meta:rid
-        if ent:topics.isnull() || ent:interval.isnull() then noop()
+        if ent:messages.isnull() || ent:state.isnull() || ent:send_sequence_number.isnull() 
+            || ent:interval.isnull() then noop()
         fired {
             ent:interval := 30;
             ent:send_sequence_number := 0;
