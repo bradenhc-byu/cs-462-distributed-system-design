@@ -122,7 +122,7 @@ ruleset gossip {
         get_peer = function(){
             add_score = function(remaining, scores){
                 peer_id = engine:getPicoIDByECI(remaining.head(){"Tx"}).klog("peer id");
-                score = get_score(peer_id);
+                score = get_score(peer_id).klog("calculated score");
                 scores.append({"peer_id": peer_id, "score": score});
                 calculate_scores(remaining.tail(), scores)
             };
@@ -130,12 +130,12 @@ ruleset gossip {
                 (remaining.length() == 0) =>
                     scores
                 |
-                    add_score(remaining, scores)
+                    add_score(remaining, scores).klog("added score result")
             };
             peers = subscription:established("Tx_role", "node");
             scores = calculate_scores(peers, []);
             set_best = function(scores, best){
-                best = scores.head();
+                best = scores.head().klog("best peer so far");
                 find_best(scores.tail(), best)
             };
             find_best = function(scores, best){
