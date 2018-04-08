@@ -132,7 +132,7 @@ ruleset gossip {
                 (seen_message_keys.length() == 0) =>
                     null
                 |
-                    compare(seen_message_keys())
+                    compare(seen_message_keys)
             };
             id = create(seen_message.keys());
             (id != null) =>
@@ -333,7 +333,7 @@ ruleset gossip {
             peer_id = parts[0].klog("peer id")
             sequence_number = parts[1].as("Number").klog("message sequence number")
             received = append_received(peer_id, sequence_number).klog("current received state")
-            should_add = ent:messages{peer_id}.filter(function(x){x{"timstamp"} == message{"timestamp"}}).length() == 0
+            should_add = ent:messages{peer_id}.filter(function(x){x{"timestamp"} == message{"timestamp"}}).length() == 0
         }
         if should_add.klog("message not already stored") then noop()
         fired {
