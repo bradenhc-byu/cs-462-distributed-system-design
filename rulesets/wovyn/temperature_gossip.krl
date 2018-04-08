@@ -13,7 +13,7 @@
  *  ent:state = {
  *      "peer_id": {
  *          "seen": { ... }, // seen message from peer  
- *          received: [], // sequence numbers. This is only size of one normally 
+ *          "received": [], // sequence numbers. This is only size of one normally 
  *      }
  *  }
  *
@@ -112,7 +112,33 @@ ruleset gossip {
             |
                 generate_seen_message(peer_ids.tail(), 
                                       seen.put(peer_ids.head(), 
-                                               ent:state{[peer_ids.head(), "received"]}[0]))
+                                               get_received(peer_ids.head())))
+        }
+
+        /**
+         * Using the messages this pico has and the requested messages in the seen, respond by
+         * sending back one message that gives the peer something they don't have. If they have
+         * everything I have, then return null so that we don't send them anything
+         */
+        generate_seen_message_response = function(seen_message){
+            compare = function(seen_message_keys){
+                top = seen_message_keys.head();
+                (seen_message{top} < get_received(seen_message{top})) =>
+                    top 
+                |
+                    create(seen_message_keys.tail())
+            };
+            create = function(seen_message_keys){
+                (seen_message_keys.length() == 0) =>
+                    null
+                |
+                    compare(seen_message_keys())
+            };
+            id = create(seen_message.keys());
+            (id != null) =>
+                ent:messages{id}[get_received(id)]
+            |
+                null
         }
 
         /** 
@@ -189,7 +215,28 @@ ruleset gossip {
          * our state to our peers.
          */
         get_received = function(peer_id){
-            ent:state{[peer_id, "received"]}.defaultsTo([0])[0]
+            ent:state{[peer_id, "received"]}.defaultsTo([0])[0].as("Number")
+        }
+
+        /**
+         * This will add a new sequence number to the 'received' array of the state corresponding
+         * to the peer pico id provided to the function. It will then sort the array and remove
+         * all complete sequence numbers so that position 0 of the array represents the largest
+         * complete in-order sequence number for that peer
+         */
+        append_received = function(peer_id, sequence_number){
+            received = ent:state{[peer_id, "received"]}.defaultsTo([0]);
+            received = received.append([sequence_number]).sort("numeric");
+            chop = function(array){
+                // If there is only one item, or the gap between two items is greater than 1, return
+                // the array
+                (array.length() == 1 || array[1] - array[0] > 1) =>
+                    array 
+                |
+                // Otherwise we want to chop off the head and continue
+                    chop(array.tail())
+            };
+            chop(received)
         }
 
         /**
@@ -206,11 +253,23 @@ ruleset gossip {
         }
 
         /**
-         * Stub for updating the state. Since this requires updating entity variables, we can't
-         * do this here. Will remove eventually.
+         * This will take a seen message from a peer and use it to update that peer's state in
+         * this pico. It uses the response we are going to send back to do so
          */
-        update_state = function(){
-            null
+        update_state = function(pico_id, seen_message, response){
+            update = function(){
+                parts = response{"message_id"}.split(re#:#);
+                response_peer_id = parts[0];
+                response_sequence_number = parts[1].as("Number");
+                seen_message{response_peer_id} = response_sequence_number;
+                current_state = ent:state{pico_id};
+                current_state{"seen"} = seen_message;
+                current_state
+            };
+            (response != null) =>
+                update()
+            |
+                ent:state{pico_id}
         }
     }
 
@@ -230,6 +289,8 @@ ruleset gossip {
         // Send the message to the chosen subscriber on the gossip topic
         if valid.klog("valid heartbeat") then
             event:send({"eci": peer, "domain": "gossip", "type": gossip_type, "attrs": {
+                "pico_id": meta:picoId,
+                "respond_eci": subscription:established("Tx", peer)[0]{"Rx"},
                 "message": message
             }})
         // Schedule the next heartbeat event
@@ -271,11 +332,16 @@ ruleset gossip {
             parts = message{"message_id"}.split(re#:#)
             peer_id = parts[0].klog("peer id")
             sequence_number = parts[1].as("Number").klog("message sequence number")
+            received = append_received(peer_id, sequence_number).klog("current received state")
             should_add = ent:messages{peer_id}.filter(function(x){x{"timstamp"} == message{"timestamp"}}).length() == 0
         }
         if should_add.klog("message not already stored") then noop()
         fired {
+            // Add it to the message
             ent:messages{peer_id} := ent:messages{peer_id}.defaultsTo([]).append([message]);
+            // Update the state 
+            ent:state{peer_id} := ent:state{peer_id}.defaultsTo({"seen": {}, "received": []});
+            ent:state{[peer_id, "received"]} := received
         }
     }
 
@@ -286,7 +352,20 @@ ruleset gossip {
     rule gossip_seen_message {
         select when gossip seen 
         pre {
-
+            peer_id = event:attr("pico_id").klog("peer pico id")
+            peer_eci = event:attr("respond_eci").klog("peer subscription Rx")
+            message = event:attr("message").klog("peer seen message")
+            response = generate_seen_message_response(message).klog("seen response")
+            peer_state = update_state(peer_id, message, response).klog("new state of peer")
+        }
+        if not response.isnull() then 
+            event:send({"eci": peer_eci, "domain": "gossip", "type": "rumor", "attrs": {
+                "pico_id": meta:picoId,
+                "message": response
+            }})
+        always {
+            ent:state{peer_id} := ent:state{peer_id}.defaultsTo({"seen": {}, "received": []});
+            ent:state{[peer_id, "seen"]} := peer_state
         }
     }
 
