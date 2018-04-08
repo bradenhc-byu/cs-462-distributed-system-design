@@ -165,7 +165,7 @@ ruleset gossip {
             peers = subscription:established("Tx_role", "node");
             scores = calculate_scores(peers, []).klog("final scores");
             pick_random = function(scores){
-                random_position = random:integer(scores.length() - 1);
+                random_position = random:integer(scores.length() - 1).klog("picked random score position");
                 scores[random_position]{"peer_id"}
             };
             set_best = function(scores, best, found){
