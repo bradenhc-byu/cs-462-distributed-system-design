@@ -158,13 +158,17 @@ ruleset gossip {
             };
             calculate_scores = function(remaining, scores){
                 (remaining.length() == 0) =>
-                    scores.klog("scores when length is zero")
+                    scores
                 |
                     add_score(remaining, scores)
             };
             peers = subscription:established("Tx_role", "node");
             scores = calculate_scores(peers, []).klog("final scores");
-            set_best = function(scores, best){
+            pick_random = function(scores){
+                random_position = random:integer(scores.length() - 1);
+                scores[random_position]{"peer_id"}
+            };
+            set_best = function(scores, best, found){
                 best = scores.head().klog("best peer so far");
                 found = true;
                 find_best(scores.tail(), best, found)
@@ -174,7 +178,7 @@ ruleset gossip {
                     best{"peer_id"}
                 |
                 (scores.length() == 0 && not found) =>
-                    scores[(scores.length() > 1) => random:integer(scores.length() - 1) | 0]{"peer_id"}
+                    pick_random(scores).klog("picked random score id")
                 |
                 (scores.head(){"score"} < best{"score"}) =>
                     set_best(scores, best, found)
