@@ -73,12 +73,12 @@ ruleset gossip {
          * message and return it. Otherwise it will return null.
          */
         create_my_message = function(){
-            latest_temperature = ts:temperatures[0].klog("latest temperature");
+            latest_temperature = ts:temperatures()[0].klog("latest temperature");
             ( not latest_temperature.isnull() ) =>
                 { "message_id": meta:picoId + ":" + ent:sequence_number,
                   "sensor_id": meta:picoId,
-                  "temperature": ts:temperatures[0]{"temperature"},
-                  "timestamp": ts:temperatures[0]{"timestamp"}
+                  "temperature": ts:temperatures()[0]{"temperature"},
+                  "timestamp": ts:temperatures()[0]{"timestamp"}
                 }
             |
                 null
