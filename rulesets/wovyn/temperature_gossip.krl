@@ -174,7 +174,7 @@ ruleset gossip {
                     best{"peer_id"}
                 |
                 (scores.length() == 0 && not found) =>
-                    scores[(scores.length() > 1) => random:integer(scores.length() - 1) | 0]
+                    scores[(scores.length() > 1) => random:integer(scores.length() - 1) | 0]{"peer_id"}
                 |
                 (scores.head(){"score"} < best{"score"}) =>
                     set_best(scores, best, found)
